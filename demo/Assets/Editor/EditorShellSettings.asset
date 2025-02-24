@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd0d8b712ba1784458302b6a5cf9a499, type: 3}
+  m_Name: EditorShellSettings
+  m_EditorClassIdentifier: 
+  DllCompileSettings:
+    BuildTarget: -2
+    Development: 0
+    OutputDir: 
+  DynamicDllCompileSettings:
+    SearchPaths:
+    - Library\ScriptAssemblies
+    References:
+    - mscorlib.dll
+    - System.Core.dll
+    - UnityEngine.CoreModule.dll
+    Usings:
+    - System
+    - System.Collections.Generic
+    - System.Linq
+    - UnityEngine
+    ScriptClassName: Script
+  Runtime: 1
+  ToolPath: ../src/GShell/publish/GShell.exe
+  ExecuteURL: http://localhost:12345/execute
+  ExtraDatas: []

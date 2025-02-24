@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GShell.Core", "GShell.Core\GShell.Core.csproj", "{E81226DB-D679-4031-B236-3A5EEF19E866}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GShell", "GShell\GShell.csproj", "{BE7A0114-1424-4D18-8682-EE560AECB6AE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E81226DB-D679-4031-B236-3A5EEF19E866}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E81226DB-D679-4031-B236-3A5EEF19E866}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E81226DB-D679-4031-B236-3A5EEF19E866}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E81226DB-D679-4031-B236-3A5EEF19E866}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE7A0114-1424-4D18-8682-EE560AECB6AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE7A0114-1424-4D18-8682-EE560AECB6AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE7A0114-1424-4D18-8682-EE560AECB6AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE7A0114-1424-4D18-8682-EE560AECB6AE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
