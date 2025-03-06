@@ -19,6 +19,7 @@ namespace GShell.Core
         public int SubmissionId => mSubmissionId;
 
         private static readonly CSharpParseOptions mParseOptions = new CSharpParseOptions(kind: SourceCodeKind.Script);
+        private static readonly string[] mSuppressedDiagnosticIds = new[] { "CS1701", "CS1702", "CS1705" };
 
         private readonly MetadataReference[] mMetadataReferences;
         private readonly string mSessionId;
@@ -82,6 +83,11 @@ namespace GShell.Core
                 using var ms = new MemoryStream();
 
                 var cr = compilation.Emit(ms);
+
+                var diagnostics = cr.Diagnostics.Where(d => !mSuppressedDiagnosticIds.Contains(d.Id));
+                foreach (var diagnostic in diagnostics)
+                    Console.WriteLine(diagnostic);
+
                 if (cr.Success)
                 {
                     mSubmissionId++;
@@ -101,9 +107,6 @@ namespace GShell.Core
                 }
                 else
                 {
-                    foreach (var diagnostic in cr.Diagnostics)
-                        Console.WriteLine(diagnostic);
-
                     return default;
                 }
             }
@@ -126,7 +129,7 @@ namespace GShell.Core
             {
                 // 添加属性: [assembly: System.Security.Permissions.SecurityPermission(System.Security.Permissions.SecurityAction.RequestMinimum, SkipVerification = true)]
 
-                var module = ModuleDefMD.Load(bytes);
+                using var module = ModuleDefMD.Load(bytes);
 
                 var namedArg = new CANamedArgument(
                     false,

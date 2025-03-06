@@ -35,8 +35,7 @@ namespace GShell
 
         public async Task<(object, bool)> Execute(string sessionId, int submissionId, byte[] rawAssembly, string scriptClassName)
         {
-            object script;
-            MethodInfo initializeMethod;
+            MethodInfo factoryMethod;
 
             if (!TryGetSubmissionArray(sessionId, submissionId, out var submissionArray))
             {
@@ -47,11 +46,8 @@ namespace GShell
             try
             {
                 var assembly = Assembly.Load(rawAssembly);
-
                 var scriptType = assembly.GetType(scriptClassName);
-                script = Activator.CreateInstance(scriptType, new object[] { submissionArray });
-
-                initializeMethod = scriptType.GetMethod("<Initialize>", BindingFlags.Public | BindingFlags.Instance);
+                factoryMethod = scriptType.GetMethod("<Factory>", BindingFlags.Public | BindingFlags.Static);
             }
             catch (Exception ex)
             {
@@ -65,7 +61,7 @@ namespace GShell
 
             try
             {
-                var obj = await (Task<object>)initializeMethod.Invoke(script, null);
+                var obj = await (Task<object>)factoryMethod.Invoke(null, new object[] { submissionArray });
                 return (obj, true);
             }
             catch (Exception ex)

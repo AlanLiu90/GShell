@@ -49,13 +49,21 @@ namespace GShell
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.Space();
 
+            GUI.enabled = mSettings != null && mSettings.DllCompileSettings.BuildTarget != BuildTarget.NoTarget;
+
             if (GUILayout.Button("编译dll"))
                 CompileDlls();
 
+            GUI.enabled = true;
+
             EditorGUILayout.Space();
+
+            GUI.enabled = mSettings != null;
 
             if (GUILayout.Button("启动"))
                 Launch();
+
+            GUI.enabled = true;
 
             EditorGUILayout.Space();
             EditorGUILayout.EndHorizontal();
@@ -83,12 +91,6 @@ namespace GShell
             if (string.IsNullOrEmpty(settings.OutputDir))
             {
                 Debug.LogError("dll的编译输出路径没有配置");
-                return;
-            }
-
-            if (settings.BuildTarget == BuildTarget.NoTarget)
-            {
-                Debug.LogError("dll的构建目标没有配置");
                 return;
             }
 
