@@ -6,7 +6,7 @@
 2. 支持在IL2CPP打包版本中使用（需要集成HybridCLR）
 3. 支持直接访问非公有的类、方法、属性、字段，不需要使用反射
 
-想了解实现细节，可以看这篇[文章]()
+如果想了解实现细节，可以看这篇[博客](https://alanliu90.hatenablog.com/entry/2025/03/08/Unity%E4%B8%ADREPL%E5%8A%9F%E8%83%BD%E7%9A%84%E5%AE%9E%E7%8E%B0)
 
 ## 运行
 
