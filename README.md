@@ -47,6 +47,8 @@
 > using UnityEngine.SceneManagement;      // 导入命名空间
 > SceneManager.GetActiveScene().name      // 访问先前导入的命名空间中的类型
 main
+> var transform = GameObject.Find("LoadDll").transform;
+> transform.localPosition = Vector3.zero; // 修改属性
 > var list = new List<int>() { 1, 2, 3 }; // 创建List
 > var s = "";
 > foreach (var item in list)              // 循环语句，支持多行输入

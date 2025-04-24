@@ -21,7 +21,6 @@ namespace GShell.Core
         private static readonly CSharpParseOptions mParseOptions = new CSharpParseOptions(kind: SourceCodeKind.Script);
         private static readonly string[] mSuppressedDiagnosticIds = new[] { "CS1701", "CS1702", "CS1705" };
 
-        private readonly MetadataReference[] mMetadataReferences;
         private readonly string mSessionId;
         private readonly string mAssemblyNamePrefix;
         private readonly string mScriptClassNamePrefix;
@@ -41,20 +40,7 @@ namespace GShell.Core
                 .WithSearchPaths(searchPaths)
                 .WithBaseDirectory(Directory.GetCurrentDirectory());
 
-            mMetadataReferences = references
-                .Select(x =>
-                {
-                    var pes = metadataReferenceResolver.ResolveReference(x, null, default);
-                    if (pes.Length == 0)
-                        throw new ArgumentException("Cannot find reference: " + x);
-
-                    return pes[0].FilePath;
-                })
-                .Select(x => MetadataReference.CreateFromFile(x))
-                .ToArray();
-
             mCompilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
-                usings: usings,
                 sourceReferenceResolver: new SourceFileResolver(ImmutableArray<string>.Empty, Directory.GetCurrentDirectory()),
                 metadataReferenceResolver: metadataReferenceResolver,
                 metadataImportOptions: MetadataImportOptions.All);
@@ -66,9 +52,19 @@ namespace GShell.Core
             mAssemblyNamePrefix = $"Dynamic_{mSessionId}";
             mScriptClassNamePrefix = scriptClassName;
             mAdditionalAttributeType = additionalAttributeType;
+
+            var loadReferencesScript = string.Join(Environment.NewLine, references.Select(x => $"#r \"{x}\""));
+            (_, _, var hasErrors) = Compile(loadReferencesScript);
+            if (hasErrors)
+                throw new Exception("Failed to initialize");
+
+            var applyUsingsScript = string.Join(Environment.NewLine, usings.Select(x => $"using {x};"));
+            (_, _, hasErrors) = Compile(applyUsingsScript);
+            if (hasErrors)
+                throw new Exception("Failed to initialize");
         }
 
-        public (byte[], string) Compile(string code)
+        public (byte[], string, bool) Compile(string code)
         {
             var tree = CSharpSyntaxTree.ParseText(code, mParseOptions);
 
@@ -78,7 +74,7 @@ namespace GShell.Core
 
             try
             {
-                var compilation = CSharpCompilation.CreateScriptCompilation(assemblyName, tree, mMetadataReferences, compilationOptions, mPreviousCompilation, typeof(object));
+                var compilation = CSharpCompilation.CreateScriptCompilation(assemblyName, tree, null, compilationOptions, mPreviousCompilation, typeof(object));
 
                 using var ms = new MemoryStream();
 
@@ -96,7 +92,7 @@ namespace GShell.Core
                     ms.Seek(0, SeekOrigin.Begin);
 
                     var rawAssembly = PostProcess(ms.ToArray());
-                    return (rawAssembly, scriptClassName);
+                    return (rawAssembly, scriptClassName, false);
                 }
                 else if (cr.Diagnostics.Length == 0)
                 {
@@ -107,13 +103,13 @@ namespace GShell.Core
                 }
                 else
                 {
-                    return default;
+                    return (default, default, true);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-                return default;
+                return (default, default, true);
             }
         }
 

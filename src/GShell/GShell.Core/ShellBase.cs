@@ -39,7 +39,7 @@ namespace GShell.Core
                     if (result.HasValue)
                         return result.Value;
 
-                    var (rawAssembly, scriptClassName) = mContext.Compile(str);
+                    var (rawAssembly, scriptClassName, _) = mContext.Compile(str);
                     if (rawAssembly == null)
                         continue;
 
