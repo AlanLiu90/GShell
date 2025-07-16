@@ -5,29 +5,32 @@
 1. 支持在编辑器内使用
 2. 支持在IL2CPP打包版本中使用（需要集成HybridCLR）
 3. 支持直接访问非公有的类、方法、属性、字段，不需要使用反射
+4. 支持Unity 2019+
 
 如果想了解实现细节，可以看这篇[博客](https://alanliu90.hatenablog.com/entry/2025/03/08/Unity%E4%B8%ADREPL%E5%8A%9F%E8%83%BD%E7%9A%84%E5%AE%9E%E7%8E%B0)
 
-## 运行
+## 运行demo
 
 ### 在编辑器中运行
 1. 执行src\GShell\publish_win64.bat
-2. 用Unity打开demo工程
-3. 打开场景：Scenes\main.unity
-4. 进入Play Mode
-5. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择EditorShellSettings
-6. 点击“启动”
+2. 执行demo\HttpServer\start.bat
+3. 用Unity打开demo\Client工程
+4. 打开场景：Scenes\main.unity
+5. 进入Play Mode
+6. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择EditorShellSettings
+7. 点击“启动”
 
 ### 在IL2CPP打包版本中运行
 1. 执行src\GShell\publish_win64.bat
-2. 用Unity打开demo工程
-3. 安装HybridCLR：HybridCLR -> Installer
-4. 构建Player：Build -> Win64
-5. 运行Player：demo\Release-Win64\HybridCLRTrial.exe
-6. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择PlayerShellSettings
-7. 点击“启动”
+2. 执行demo\HttpServer\start.bat
+3. 用Unity打开demo\Client工程
+4. 安装HybridCLR：HybridCLR -> Installer
+5. 构建Player：Build -> Win64
+6. 运行Player：demo\Client\Release-Win64\HybridCLRTrial.exe
+7. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择PlayerShellSettings
+8. 点击“启动”
 
-### 示例
+### 功能示例
 ```
 > 1+2                                     // 执行表达式，输出值
 3
@@ -62,7 +65,6 @@ main
 ```
 
 ## 配置
-demo工程的配置在`Assets\Editor\*ShellSettings.asset`
 1. 编译程序集的配置
    * 用于生成一份指定平台的dll，供GShell编译动态代码时引用
    * 在编辑器中使用时，需要将Build Target设置为`No Target`
@@ -70,10 +72,8 @@ demo工程的配置在`Assets\Editor\*ShellSettings.asset`
    * Search Paths：搜索引用的dll的路径列表，越前面的目录优先级越高
       * 在编辑器中使用时，需要添加Library\ScriptAssemblies
       * 工具会自动在最前面添加编译程序集的输出目录
-      * 工具会自动在最后面添加mscorlib.dll、UnityEngine.CoreModule.dll所在的目录
-   * References：编译动态代码时引用的dll，下面是一些常用的dll：
-      * mscorlib.dll
-      * System.Core.dll
+      * 工具会自动在最后面添加UnityEngine.CoreModule.dll所在的目录
+   * References：编译动态代码时引用的dll，下面是一些常用的dll (工具会自动引用mscorlib.dll、System.Core.dll等目标框架内置的dll，这里不需要添加)：
       * UnityEngine.CoreModule.dll
    * Usings：编译动态代码时自动导入的命名空间，下面是一些常用的命名空间：
       * System
@@ -82,38 +82,21 @@ demo工程的配置在`Assets\Editor\*ShellSettings.asset`
       * UnityEngine
    * Script Class Name：编译动态代码时，自动创建的类型名，一般不需要修改
 3. Runtime：编辑器中使用选择Mono，IL2CPP打包版本中使用选择IL2CPP
-3. Tool Path：GShell的可执行的文件的路径
+3. Tool Path：GShell的可执行文件的路径
 4. Execute URL：GShell编译代码后，将发送给这个URL执行
-5. Extra Datas：GShell发送给Execute URL的额外数据。比如可以添加玩家ID，让游戏服务器通过它将GShell请求转发给指定的客户端执行
+5. Extra Datas：GShell发送给`Execute URL`的额外数据。比如可以添加玩家ID，让游戏服务器通过它将GShell请求转发给指定的客户端执行
+6. 认证的配置
+    * Type:
+      * None: 不使用认证
+      * Basic: 使用Basic认证方式，需要填写账号、密码
+      * JWT: 使用JSON Web Token认证方式，需要填写令牌
+    * 具体的认证逻辑和令牌生成逻辑，可参考demo\HttpServer
+    * 使用认证时，建议使用HTTPS和服务器通信
 
 ## 集成
-工具使用HTTP协议和外部通信。项目可以在服务端接收GShell发送的数据，将其转发给指定的客户端执行。客户端执行之后，通过游戏服务器转发回GShell
+工具使用HTTP(S)协议和外部通信。项目可以在服务端接收GShell发送的数据，将其转发给指定的客户端执行。客户端执行之后，通过游戏服务器转发回GShell
 
-demo工程中提供了集成的示例，代码在 demo\Assets\HotUpdate\TestShell.cs
+demo工程中提供了集成的示例，代码在 demo\Client\Assets\HotUpdate\TestShell.cs 和 demo\HttpServer\HttpServer.cs
 
 ## 限制
 GShell中的每个输入（比如一个表达式、一条语句或者一个函数定义）都会编译为一个单独的dll，而HybridCLR支持加载最多338个dll（[文档](https://hybridclr.doc.code-philosophy.com/docs/help/faq)）
-
-## 常见问题
-1. 使用经过裁剪的mscorlib.dll（比如在使用HybridCLR DHE的项目中，用快照dll的目录作为搜索路径）时，可能因为代码裁剪，导致动态代码无法编译：
-```
-> 1+2
-(1,1): error CS0656: Missing compiler required member 'System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.AwaitOnCompleted'
-```
-这种情况需要在项目的Assets目录（或者其子目录）添加link.xml，重新打包，并将新生成的dll的所在目录设置为搜索路径：
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<linker>
-  <assembly fullname="mscorlib">
-    <type fullname="System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1" preserve="all" />
-  </assembly>
-</linker>
-```
-2. 在Unity 2022中使用默认的mscorlib.dll（在Unity的安装目录内）时，有一些动态代码无法编译：
-```
-> using UnityEngine.SceneManagement;
-> SceneManager.GetActiveScene().name
-(1,14): error CS0012: The type 'Object' is defined in an assembly that is not referenced. You must add a reference to assembly 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51'.
-(1,1): error CS0012: The type 'ValueType' is defined in an assembly that is not referenced. You must add a reference to assembly 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51'.
-```
-这种情况下需要添加引用netstandard.dll

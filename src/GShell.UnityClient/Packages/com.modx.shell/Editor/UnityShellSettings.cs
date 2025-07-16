@@ -34,6 +34,20 @@ namespace GShell
         Mono,
     }
 
+    public enum AuthenticationType
+    {
+        None,
+        Basic,
+        JWT,
+    }
+
+    [Serializable]
+    public class AuthenticationSettings
+    {
+        public AuthenticationType Type;
+        public string Data;
+    }
+
     [CreateAssetMenu(fileName = "ShellSettings", menuName = "ScriptableObjects/ShellSettings")]
     public class UnityShellSettings : ScriptableObject
     {
@@ -43,5 +57,6 @@ namespace GShell
         public string ToolPath;
         public string ExecuteURL;
         public ExtraDataItem[] ExtraDatas;
+        public AuthenticationSettings AuthenticationSettings = new AuthenticationSettings();
     }
 }

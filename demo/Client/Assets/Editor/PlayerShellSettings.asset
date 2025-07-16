@@ -10,18 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cd0d8b712ba1784458302b6a5cf9a499, type: 3}
-  m_Name: EditorShellSettings
+  m_Name: PlayerShellSettings
   m_EditorClassIdentifier: 
   DllCompileSettings:
-    BuildTarget: -2
+    BuildTarget: 19
     Development: 0
-    OutputDir: 
+    OutputDir: HybridCLRData/HotUpdateDlls
   DynamicDllCompileSettings:
-    SearchPaths:
-    - Library\ScriptAssemblies
+    SearchPaths: []
     References:
-    - mscorlib.dll
-    - System.Core.dll
     - UnityEngine.CoreModule.dll
     Usings:
     - System
@@ -29,7 +26,12 @@ MonoBehaviour:
     - System.Linq
     - UnityEngine
     ScriptClassName: Script
-  Runtime: 1
-  ToolPath: ../src/GShell/publish/GShell.exe
+  Runtime: 0
+  ToolPath: ../../src/GShell/publish/GShell.exe
   ExecuteURL: http://localhost:12345/execute
-  ExtraDatas: []
+  ExtraDatas:
+  - Key: PlayerId
+    Value: 100
+  AuthenticationSettings:
+    Type: 0
+    Data: 

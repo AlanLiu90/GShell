@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using GShell.Core;
-using Newtonsoft.Json;
 
 namespace GShell
 {
@@ -13,6 +13,8 @@ namespace GShell
     {
         private static async Task Main(string[] args)
         {
+            var logger = new Logger();
+
             try
             {
                 if (args.Length == 0)
@@ -23,22 +25,38 @@ namespace GShell
 
                 var path = args[0];
                 var json = File.ReadAllText(path);
-                var settings = JsonConvert.DeserializeObject<ShellSettings>(json);
+                var settings = JsonSerializer.Deserialize<ShellSettings>(json);
 
+                var targetFramework = GetTargetFramework(settings.TargetFramework);
                 var searchPaths = settings.SearchPaths;
                 var references = settings.References;
                 var usings = settings.Usings;
                 var scriptClassName = settings.ScriptClassName;
                 var extraData = settings.ExtraData;
                 var additionalAttributeType = GetAdditionalAttributeType(settings.Runtime);
+                var authenticationData = GetAuthenticationData(settings.AuthenticationType, settings.AuthenticationData);
 
-                PrintInfo(searchPaths, references, usings, extraData);
+                PrintInfo(targetFramework, searchPaths, references, usings, extraData);
 
                 bool exit = false;
                 while (!exit)
                 {
-                    var context = new ShellContext(searchPaths, references, usings, scriptClassName, additionalAttributeType);
-                    var shell = new GShell(context, settings.ExecuteURL, extraData.ToDictionary(x => x.Key, x => x.Value));
+                    var context = new ShellContext(
+                        targetFramework,
+                        searchPaths,
+                        references,
+                        usings,
+                        scriptClassName,
+                        additionalAttributeType,
+                        logger
+                    );
+
+                    var shell = new GShell(
+                        context,
+                        settings.ExecuteURL,
+                        extraData.ToDictionary(x => x.Key, x => x.Value),
+                        authenticationData
+                    );
 
                     var ret = await shell.Run();
                     switch (ret)
@@ -58,20 +76,27 @@ namespace GShell
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                logger.LogError(ex);
             }
 
             Console.WriteLine("Press any key to close this window . . .");
             Console.ReadKey();
         }
 
-        private static void PrintInfo(IEnumerable<string> searchPaths,
+        private static void PrintInfo(
+            TargetFramework targetFramework,
+            IEnumerable<string> searchPaths,
             IEnumerable<string> references,
             IEnumerable<string> usings,
             ExtraDataItem[] extraDatas)
         {
             var sb = new StringBuilder();
 
+            sb.AppendLine("TargetFramework:");
+            sb.AppendFormat("  {0}", targetFramework);
+            sb.AppendLine();
+
+            sb.AppendLine();
             sb.AppendLine("SearchPath:");
 
             foreach (var item in searchPaths)
@@ -81,7 +106,6 @@ namespace GShell
             }
 
             sb.AppendLine();
-
             sb.AppendLine("Reference:");
 
             foreach (var item in references)
@@ -113,6 +137,21 @@ namespace GShell
             Console.WriteLine(sb.ToString());
         }
 
+        private static TargetFramework GetTargetFramework(string targetFramework)
+        {
+            switch (targetFramework)
+            {
+                case "netstandard2.0":
+                    return TargetFramework.NetStandard20;
+
+                case "netstandard2.1":
+                    return TargetFramework.NetStandard21;
+
+                default:
+                    throw new NotSupportedException($"No support for {targetFramework}");
+            }
+        }
+
         private static AdditionalAttributeType GetAdditionalAttributeType(string runtime)
         { 
             switch (runtime)
@@ -123,6 +162,30 @@ namespace GShell
                 default:
                     return AdditionalAttributeType.None;
             }
+        }
+
+        private static AuthenticationData GetAuthenticationData(string type, string data)
+        {
+            if (!Enum.TryParse<AuthenticationType>(type, out var authType))
+                throw new NotSupportedException($"No support for {type}");
+            
+            AuthenticationData authData;
+
+            switch (authType)
+            {
+                case AuthenticationType.Basic:
+                case AuthenticationType.JWT:
+                    authData = JsonSerializer.Deserialize<AuthenticationData>(data);
+                    authData.Type = authType;
+                    break;
+
+                case AuthenticationType.None:
+                default:
+                    authData = null;
+                    break;
+            }
+
+            return authData;
         }
     }
 }

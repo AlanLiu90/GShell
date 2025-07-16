@@ -8,6 +8,7 @@ using dnlib.DotNet;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
+using Basic.Reference.Assemblies;
 
 namespace GShell.Core
 {
@@ -19,30 +20,48 @@ namespace GShell.Core
         public int SubmissionId => mSubmissionId;
 
         private static readonly CSharpParseOptions mParseOptions = new CSharpParseOptions(kind: SourceCodeKind.Script);
-        private static readonly string[] mSuppressedDiagnosticIds = new[] { "CS1701", "CS1702", "CS1705" };
 
+        private readonly ImmutableArray<PortableExecutableReference> mMetadataReferences;
         private readonly string mSessionId;
         private readonly string mAssemblyNamePrefix;
         private readonly string mScriptClassNamePrefix;
         private readonly AdditionalAttributeType mAdditionalAttributeType;
+        private readonly ILogger mLogger;
         private readonly CSharpCompilationOptions mCompilationOptions;
 
         private int mSubmissionId = 1;
         private CSharpCompilation mPreviousCompilation;
 
-        public ShellContext(IEnumerable<string> searchPaths,
+        public ShellContext(
+            TargetFramework targetFramework,
+            IEnumerable<string> searchPaths,
             IEnumerable<string> references,
             IEnumerable<string> usings,
             string scriptClassName = "Script",
-            AdditionalAttributeType additionalAttributeType = AdditionalAttributeType.None)
+            AdditionalAttributeType additionalAttributeType = AdditionalAttributeType.None,
+            ILogger logger = null)
         {
+            switch (targetFramework)
+            {
+                case TargetFramework.NetStandard20:
+                    mMetadataReferences = NetStandard20.References.All;
+                    break;
+
+                case TargetFramework.NetStandard21:
+                    mMetadataReferences = NetStandard21.References.All;
+                    break;
+
+                default:
+                    throw new NotSupportedException($"No support for {targetFramework}");
+            }
+
             var metadataReferenceResolver = ScriptMetadataResolver.Default
                 .WithSearchPaths(searchPaths)
                 .WithBaseDirectory(Directory.GetCurrentDirectory());
 
             mCompilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
                 sourceReferenceResolver: new SourceFileResolver(ImmutableArray<string>.Empty, Directory.GetCurrentDirectory()),
-                metadataReferenceResolver: metadataReferenceResolver,
+                metadataReferenceResolver: new ShellMetadataReferenceResolver(metadataReferenceResolver, mMetadataReferences),
                 metadataImportOptions: MetadataImportOptions.All);
 
             var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -52,6 +71,7 @@ namespace GShell.Core
             mAssemblyNamePrefix = $"Dynamic_{mSessionId}";
             mScriptClassNamePrefix = scriptClassName;
             mAdditionalAttributeType = additionalAttributeType;
+            mLogger = logger;
 
             var loadReferencesScript = string.Join(Environment.NewLine, references.Select(x => $"#r \"{x}\""));
             (_, _, var hasErrors) = Compile(loadReferencesScript);
@@ -74,15 +94,14 @@ namespace GShell.Core
 
             try
             {
-                var compilation = CSharpCompilation.CreateScriptCompilation(assemblyName, tree, null, compilationOptions, mPreviousCompilation, typeof(object));
+                var compilation = CSharpCompilation.CreateScriptCompilation(assemblyName, tree, mMetadataReferences, compilationOptions, mPreviousCompilation, null);
 
                 using var ms = new MemoryStream();
 
                 var cr = compilation.Emit(ms);
 
-                var diagnostics = cr.Diagnostics.Where(d => !mSuppressedDiagnosticIds.Contains(d.Id));
-                foreach (var diagnostic in diagnostics)
-                    Console.WriteLine(diagnostic);
+                foreach (var diagnostic in cr.Diagnostics)
+                    mLogger?.LogDiagnostic(diagnostic);
 
                 if (cr.Success)
                 {
@@ -108,7 +127,7 @@ namespace GShell.Core
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                mLogger?.LogError(ex);
                 return (default, default, true);
             }
         }

@@ -172,29 +172,7 @@ namespace GShell
                 }
             }
 
-            var monoPath = Path.Combine(EditorApplication.applicationContentsPath, "MonoBleedingEdge/lib/mono/unityaot");
-
-#if UNITY_2022_1_OR_NEWER
-            switch (Application.platform)
-            {
-                case RuntimePlatform.WindowsEditor:
-                    monoPath += "-win32";
-                    break;
-
-                case RuntimePlatform.OSXEditor:
-                    monoPath += "macos";
-                    break;
-
-                case RuntimePlatform.LinuxEditor:
-                    monoPath += "linux";
-                    break;
-            }
-#endif
-            searchPaths.Add(monoPath);
-            searchPaths.Add(Path.Combine(monoPath, "Facades"));
-
             searchPaths.Add(Path.Combine(EditorApplication.applicationContentsPath, "Managed/UnityEngine"));
-
             searchPaths = searchPaths.Select(x => x.Replace("\\", "/")).ToList();
 
             if (mSettings.ExtraDatas != null)
@@ -211,6 +189,13 @@ namespace GShell
 
             // 保存配置表
             var settings = new ShellSettings();
+
+#if UNITY_2021_1_OR_NEWER
+            settings.TargetFramework = "netstandard2.1";
+#else
+            settings.TargetFramework = "netstandard2.0";
+#endif
+
             settings.SearchPaths = searchPaths.ToArray();
             settings.References = mSettings.DynamicDllCompileSettings.References ?? Array.Empty<string>();
             settings.Usings = mSettings.DynamicDllCompileSettings.Usings ?? Array.Empty<string>();
@@ -218,6 +203,8 @@ namespace GShell
             settings.Runtime = mSettings.Runtime.ToString();
             settings.ExecuteURL = mSettings.ExecuteURL;
             settings.ExtraData = mSettings.ExtraDatas ?? Array.Empty<ExtraDataItem>();
+            settings.AuthenticationType = mSettings.AuthenticationSettings.Type.ToString();
+            settings.AuthenticationData = mSettings.AuthenticationSettings.Data;
 
             string json = JsonUtility.ToJson(settings, true);
             File.WriteAllText(TempSettingPath, json);
