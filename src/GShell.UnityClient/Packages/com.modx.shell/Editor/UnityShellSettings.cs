@@ -56,7 +56,8 @@ namespace GShell
         public Runtime Runtime;
         public string ToolPath;
         public string ExecuteURL;
-        public ExtraDataItem[] ExtraDatas;
+        public string[] ExtraAssemblies;
+        public ExtraDataItem[] ExtraDataItems;
         public AuthenticationSettings AuthenticationSettings = new AuthenticationSettings();
     }
 }

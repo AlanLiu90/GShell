@@ -18,7 +18,8 @@ namespace GShell
         public string ScriptClassName { get; set; }
         public string Runtime { get; set; }
         public string ExecuteURL { get; set; }
-        public ExtraDataItem[] ExtraData { get; set; }
+        public string[] ExtraAssemblies { get; set; }
+        public ExtraDataItem[] ExtraDataItems { get; set; }
         public string AuthenticationType { get; set; }
         public string AuthenticationData { get; set; }
     }

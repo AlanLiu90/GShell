@@ -4,11 +4,10 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Basic.Reference.Assemblies;
 using dnlib.DotNet;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Scripting;
-using Basic.Reference.Assemblies;
 
 namespace GShell.Core
 {
@@ -55,13 +54,11 @@ namespace GShell.Core
                     throw new NotSupportedException($"No support for {targetFramework}");
             }
 
-            var metadataReferenceResolver = ScriptMetadataResolver.Default
-                .WithSearchPaths(searchPaths)
-                .WithBaseDirectory(Directory.GetCurrentDirectory());
+            var metadataReferenceResolver = new ShellMetadataReferenceResolver(searchPaths.ToImmutableArray());
 
             mCompilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
                 sourceReferenceResolver: new SourceFileResolver(ImmutableArray<string>.Empty, Directory.GetCurrentDirectory()),
-                metadataReferenceResolver: new ShellMetadataReferenceResolver(metadataReferenceResolver, mMetadataReferences),
+                metadataReferenceResolver: metadataReferenceResolver,
                 metadataImportOptions: MetadataImportOptions.All);
 
             var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -94,7 +91,7 @@ namespace GShell.Core
 
             try
             {
-                var compilation = CSharpCompilation.CreateScriptCompilation(assemblyName, tree, mMetadataReferences, compilationOptions, mPreviousCompilation, null);
+                var compilation = CSharpCompilation.CreateScriptCompilation(assemblyName, tree, mMetadataReferences, compilationOptions, mPreviousCompilation);
 
                 using var ms = new MemoryStream();
 
@@ -153,8 +150,8 @@ namespace GShell.Core
                     new CAArgument(module.CorLibTypes.Boolean, true));
 
                 var attrType = module.Import(typeof(System.Security.Permissions.SecurityPermissionAttribute));
-                var secDecl = new DeclSecurityUser(SecurityAction.RequestMinimum, new[] { 
-                    new SecurityAttribute(attrType, new[] { namedArg }) 
+                var secDecl = new DeclSecurityUser(SecurityAction.RequestMinimum, new[] {
+                    new SecurityAttribute(attrType, new[] { namedArg })
                 });
 
                 module.Assembly.DeclSecurities.Add(secDecl);

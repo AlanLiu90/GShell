@@ -32,11 +32,12 @@ namespace GShell
                 var references = settings.References;
                 var usings = settings.Usings;
                 var scriptClassName = settings.ScriptClassName;
-                var extraData = settings.ExtraData;
+                var extraAssemblies = settings.ExtraAssemblies;
+                var extraDataItems = settings.ExtraDataItems;
                 var additionalAttributeType = GetAdditionalAttributeType(settings.Runtime);
                 var authenticationData = GetAuthenticationData(settings.AuthenticationType, settings.AuthenticationData);
 
-                PrintInfo(targetFramework, searchPaths, references, usings, extraData);
+                PrintInfo(targetFramework, searchPaths, references, usings, extraAssemblies, extraDataItems);
 
                 bool exit = false;
                 while (!exit)
@@ -54,7 +55,8 @@ namespace GShell
                     var shell = new GShell(
                         context,
                         settings.ExecuteURL,
-                        extraData.ToDictionary(x => x.Key, x => x.Value),
+                        extraAssemblies,
+                        extraDataItems.ToDictionary(x => x.Key, x => x.Value),
                         authenticationData
                     );
 
@@ -85,10 +87,11 @@ namespace GShell
 
         private static void PrintInfo(
             TargetFramework targetFramework,
-            IEnumerable<string> searchPaths,
-            IEnumerable<string> references,
-            IEnumerable<string> usings,
-            ExtraDataItem[] extraDatas)
+            string[] searchPaths,
+            string[] references,
+            string[] usings,
+            string[] extraAssemblies,
+            ExtraDataItem[] extraDataItems)
         {
             var sb = new StringBuilder();
 
@@ -124,9 +127,18 @@ namespace GShell
             }
 
             sb.AppendLine();
-            sb.AppendLine("ExtraData:");
+            sb.AppendLine("ExtraAssemblies:");
 
-            foreach (var data in extraDatas)
+            foreach (var assembly in extraAssemblies)
+            {
+                sb.AppendFormat("  {0}", assembly);
+                sb.AppendLine();
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("ExtraDataItems:");
+
+            foreach (var data in extraDataItems)
             {
                 sb.AppendFormat("  {0}: {1}", data.Key, data.Value);
                 sb.AppendLine();

@@ -39,7 +39,7 @@ namespace GShell
         {
             EditorGUI.BeginChangeCheck();
 
-            mSettings = (UnityShellSettings)EditorGUILayout.ObjectField("配置", mSettings, typeof(UnityShellSettings), false);
+            mSettings = (UnityShellSettings)EditorGUILayout.ObjectField("Configuration", mSettings, typeof(UnityShellSettings), false);
 
             if (EditorGUI.EndChangeCheck())
                 SavePrefs();
@@ -51,7 +51,7 @@ namespace GShell
 
             GUI.enabled = mSettings != null && mSettings.DllCompileSettings.BuildTarget != BuildTarget.NoTarget;
 
-            if (GUILayout.Button("编译dll"))
+            if (GUILayout.Button("Compile DLLs"))
                 CompileDlls();
 
             GUI.enabled = true;
@@ -60,7 +60,7 @@ namespace GShell
 
             GUI.enabled = mSettings != null;
 
-            if (GUILayout.Button("启动"))
+            if (GUILayout.Button("Launch"))
                 Launch();
 
             GUI.enabled = true;
@@ -82,7 +82,7 @@ namespace GShell
         {
             if (mSettings == null)
             {
-                Debug.LogError("配置为空");
+                Debug.LogError("Configuration is empty");
                 return;
             }
 
@@ -90,7 +90,7 @@ namespace GShell
 
             if (string.IsNullOrEmpty(settings.OutputDir))
             {
-                Debug.LogError("dll的编译输出路径没有配置");
+                Debug.LogError("'OutputDir' in DllCompileSettings is empty");
                 return;
             }
 
@@ -111,14 +111,14 @@ namespace GShell
 #if UNITY_2022
             UnityEditor.EditorUtility.ClearProgressBar();
 #endif
-            Debug.Log("编译完成");
+            Debug.Log("Compilation finished");
         }
 
         private void Launch()
         {
             if (mSettings == null)
             {
-                Debug.LogError("配置为空");
+                Debug.LogError("Configuration is empty");
                 return;
             }
 
@@ -130,14 +130,14 @@ namespace GShell
             {
                 if (string.IsNullOrEmpty(dllCompileSettings.OutputDir))
                 {
-                    Debug.LogError("dll的编译输出路径没有配置");
+                    Debug.LogError("'OutputDir' in DllCompileSettings is empty");
                     return;
                 }
 
                 string dllDir = Path.Combine(dllCompileSettings.OutputDir, dllCompileSettings.BuildTarget.ToString());
                 if (!Directory.Exists(dllDir) || !Directory.EnumerateFiles(dllDir).Any())
                 {
-                    Debug.LogError("dll还未编译");
+                    Debug.LogError("The DLLs have not been compiled yet");
                     return;
                 }
 
@@ -146,13 +146,13 @@ namespace GShell
 
             if (string.IsNullOrEmpty(mSettings.ToolPath))
             {
-                Debug.LogError("ToolPath未配置");
+                Debug.LogError("ToolPath is empty");
                 return;
             }
 
             if (string.IsNullOrEmpty(mSettings.ExecuteURL))
             {
-                Debug.LogError("ExecuteURL未配置");
+                Debug.LogError("ExecuteURL is empty");
                 return;
             }
 
@@ -164,7 +164,7 @@ namespace GShell
 
                     if (!Directory.Exists(dir))
                     {
-                        Debug.LogError("目录不存在: " + dir);
+                        Debug.LogError("The directory doesn't exist: " + dir);
                         return;
                     }
 
@@ -175,19 +175,19 @@ namespace GShell
             searchPaths.Add(Path.Combine(EditorApplication.applicationContentsPath, "Managed/UnityEngine"));
             searchPaths = searchPaths.Select(x => x.Replace("\\", "/")).ToList();
 
-            if (mSettings.ExtraDatas != null)
+            if (mSettings.ExtraDataItems != null)
             {
-                foreach (var data in mSettings.ExtraDatas)
+                foreach (var data in mSettings.ExtraDataItems)
                 {
                     if (string.IsNullOrEmpty(data.Key))
                     {
-                        Debug.Log("ExtraData配置的键值为空");
+                        Debug.Log("Key is empty in ExtraData");
                         return;
                     }
                 }
             }
 
-            // 保存配置表
+            // Save settings
             var settings = new ShellSettings();
 
 #if UNITY_2021_1_OR_NEWER
@@ -202,14 +202,15 @@ namespace GShell
             settings.ScriptClassName = mSettings.DynamicDllCompileSettings.ScriptClassName;
             settings.Runtime = mSettings.Runtime.ToString();
             settings.ExecuteURL = mSettings.ExecuteURL;
-            settings.ExtraData = mSettings.ExtraDatas ?? Array.Empty<ExtraDataItem>();
+            settings.ExtraAssemblies = mSettings.ExtraAssemblies ?? Array.Empty<string>();
+            settings.ExtraDataItems = mSettings.ExtraDataItems ?? Array.Empty<ExtraDataItem>();
             settings.AuthenticationType = mSettings.AuthenticationSettings.Type.ToString();
             settings.AuthenticationData = mSettings.AuthenticationSettings.Data;
 
             string json = JsonUtility.ToJson(settings, true);
             File.WriteAllText(TempSettingPath, json);
 
-            // 启动 GShell
+            // Start GShell
             string toolPath = mSettings.ToolPath;
             string settingPath = TempSettingPath;
 
@@ -232,42 +233,5 @@ namespace GShell
 
             Process.Start(startInfo);
         }
-
-#if false
-        private string GetRealPath(SearchPath searchPath)
-        {
-            switch (searchPath.Type)
-            {
-                case SearchPathType.System:
-                    var path = Path.Combine(EditorApplication.applicationContentsPath, "MonoBleedingEdge/lib/mono/unityaot");
-
-#if UNITY_2022_1_OR_NEWER
-                    switch (Application.platform)
-                    {
-                        case RuntimePlatform.WindowsEditor:
-                            path += "-win32";
-                            break;
-
-                        case RuntimePlatform.OSXEditor:
-                            path += "macos";
-                            break;
-
-                        case RuntimePlatform.LinuxEditor:
-                            path += "linux";
-                            break;
-                    }
-#endif
-
-                    return path;
-
-                case SearchPathType.Unity:
-                    return Path.Combine(EditorApplication.applicationContentsPath, "Managed/UnityEngine");
-
-                default:
-
-                    return searchPath.Path;
-            }
-        }
-#endif
     }
 }

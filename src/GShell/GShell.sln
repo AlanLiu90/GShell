@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GShell.Core", "GShell.Core\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GShell", "GShell\GShell.csproj", "{BE7A0114-1424-4D18-8682-EE560AECB6AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basic.Reference.Assemblies.NetStandard21", "Basic.Reference.Assemblies.NetStandard21\Basic.Reference.Assemblies.NetStandard21.csproj", "{C56DD5C0-F687-1B87-2A07-F0B0B25396A3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GShell.ObjectFormatter", "GShell.ObjectFormatter\GShell.ObjectFormatter.csproj", "{EA92F325-D182-3B9D-986F-471565396699}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{BE7A0114-1424-4D18-8682-EE560AECB6AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE7A0114-1424-4D18-8682-EE560AECB6AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE7A0114-1424-4D18-8682-EE560AECB6AE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C56DD5C0-F687-1B87-2A07-F0B0B25396A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C56DD5C0-F687-1B87-2A07-F0B0B25396A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C56DD5C0-F687-1B87-2A07-F0B0B25396A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C56DD5C0-F687-1B87-2A07-F0B0B25396A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA92F325-D182-3B9D-986F-471565396699}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA92F325-D182-3B9D-986F-471565396699}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA92F325-D182-3B9D-986F-471565396699}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA92F325-D182-3B9D-986F-471565396699}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

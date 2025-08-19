@@ -10,6 +10,21 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GShell.Core\GShell.Core.csproj" />
+    <ProjectReference Include="..\GShell.ObjectFormatter\GShell.ObjectFormatter.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
+  <Target Name="CopyGShellObjectFormatterWhenBuild" AfterTargets="Build">
+    <Copy
+      SourceFiles="..\GShell.ObjectFormatter\bin\$(Configuration)\netstandard2.0\GShell.ObjectFormatter.dll"
+      DestinationFolder="$(OutputPath)"
+      SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyGShellObjectFormatterWhenPublish" AfterTargets="Publish">
+    <Copy
+      SourceFiles="..\GShell.ObjectFormatter\bin\$(Configuration)\netstandard2.0\GShell.ObjectFormatter.dll"
+      DestinationFolder="$(PublishDir)"
+      SkipUnchangedFiles="true" />
+  </Target>
   
 </Project>

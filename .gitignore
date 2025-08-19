@@ -85,3 +85,6 @@ Build-Mac
 /demo/Client/*.sln
 /demo/Client/*.csproj
 /demo/Client/Temp
+/src/GShell/GShell.ObjectFormatter/obj
+/src/GShell/GShell.ObjectFormatter/bin
+/src/GShell/obj

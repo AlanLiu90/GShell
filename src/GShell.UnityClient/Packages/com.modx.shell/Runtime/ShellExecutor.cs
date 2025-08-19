@@ -16,13 +16,13 @@ namespace GShell
 
         private readonly Dictionary<string, SessionData> mSessions = new Dictionary<string, SessionData>();
 
-        public Task<(object, bool)> Execute(string sessionId, int submissionId, string encodedRawAssembly, string scriptClassName)
+        public Task<(object, bool)> Execute(string sessionId, int submissionId, string encodedAssembly, string scriptClassName)
         {
             byte[] rawAssembly;
 
             try
             {
-                rawAssembly = Convert.FromBase64String(encodedRawAssembly);
+                rawAssembly = Convert.FromBase64String(encodedAssembly);
             }
             catch (Exception ex)
             {

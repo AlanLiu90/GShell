@@ -15,8 +15,9 @@ namespace HttpServer
     {
         public string SessionId { get; set; }
         public int SubmissionId { get; set; }
-        public string RawAssembly { get; set; }
+        public string EncodedAssembly { get; set; }
         public string ScriptClassName { get; set; }
+        public Dictionary<string, string> ExtraEncodedAssemblies { get; set; }
         public Dictionary<string, string> ExtraData { get; set; }
     }
 
@@ -61,7 +62,7 @@ namespace HttpServer
                 httpListener.Prefixes.Add(mAddress);
                 httpListener.Start();
 
-                Console.WriteLine("开始监听: " + mAddress);
+                Console.WriteLine("Start listening: " + mAddress);
 
                 while (true)
                 {

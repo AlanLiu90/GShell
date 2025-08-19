@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -21,18 +22,21 @@ namespace GShell
 
         private readonly string mURL;
         private readonly Dictionary<string, string> mExtraData;
+        private readonly Dictionary<string, string> mExtraEncodedAssemblies;
         private readonly AuthenticationData mAuthenticationData;
         private readonly HttpClient mHttpClient;
 
         public GShell(
             ShellContext context,
             string url,
+            string[] extraAssemblies,
             Dictionary<string, string> extraData,
             AuthenticationData authenticationData
         )
             : base(context)
         {
             mURL = url;
+            mExtraEncodedAssemblies = LoadExtraAssemblies(extraAssemblies);
             mExtraData = extraData;
             mAuthenticationData = authenticationData;
             mHttpClient = new HttpClient();
@@ -42,11 +46,14 @@ namespace GShell
 
         protected override async Task<bool> Process(byte[] rawAssembly, string scriptClassName)
         {
+            int submissionId = mContext.SubmissionId - 1;
+
             var obj = new {
                 SessionId = mContext.SessionId,
-                SubmissionId = mContext.SubmissionId - 1,
-                RawAssembly = Convert.ToBase64String(rawAssembly),
+                SubmissionId = submissionId,
+                EncodedAssembly = Convert.ToBase64String(rawAssembly),
                 ScriptClassName = scriptClassName,
+                ExtraEncodedAssemblies = submissionId == 1 ? mExtraEncodedAssemblies : null,
                 ExtraData = mExtraData,
             };
 
@@ -75,6 +82,41 @@ namespace GShell
                 Console.WriteLine(resp.Result);
 
             return true;
+        }
+
+        private Dictionary<string, string> LoadExtraAssemblies(string[] extraAssemblies)
+        {
+            if (extraAssemblies == null || extraAssemblies.Length == 0)
+                return null;
+
+            var encodedAssemblies = new Dictionary<string, string>();
+
+            var dir = Path.GetDirectoryName(GetType().Assembly.Location);
+
+            foreach (var assembly in extraAssemblies)
+            {
+                string path;
+
+                if (File.Exists(assembly))
+                {
+                    path = assembly;
+                }
+                else
+                {
+                    path = Path.Combine(dir, assembly);
+                    if (!File.Exists(path))
+                        throw new FileNotFoundException("File not found", assembly);
+                }
+
+                var name = Path.GetFileName(path);
+                if (encodedAssemblies.ContainsKey(name))
+                    throw new ArgumentException($"Duplicate assembly: {name}");
+
+                var bytes = File.ReadAllBytes(path);
+                encodedAssemblies.Add(name, Convert.ToBase64String(bytes));
+            }
+
+            return encodedAssemblies;
         }
 
         private void SetRequestHeaders()

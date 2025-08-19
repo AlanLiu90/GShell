@@ -30,7 +30,9 @@ MonoBehaviour:
   Runtime: 1
   ToolPath: ../../src/GShell/publish/GShell.exe
   ExecuteURL: http://localhost:12345/execute
-  ExtraDatas:
+  ExtraAssemblies:
+  - GShell.ObjectFormatter.dll
+  ExtraDataItems:
   - Key: PlayerId
     Value: 100
   AuthenticationSettings:

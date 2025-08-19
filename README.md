@@ -18,7 +18,7 @@
 4. 打开场景：Scenes\main.unity
 5. 进入Play Mode
 6. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择EditorShellSettings
-7. 点击“启动”
+7. 点击“Launch”
 
 ### 在IL2CPP打包版本中运行
 1. 执行src\GShell\publish_win64.bat
@@ -28,7 +28,8 @@
 5. 构建Player：Build -> Win64
 6. 运行Player：demo\Client\Release-Win64\HybridCLRTrial.exe
 7. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择PlayerShellSettings
-8. 点击“启动”
+8. 点击“Compile DLLs”
+9. 点击“Launch”
 
 ### 功能示例
 ```
@@ -49,16 +50,22 @@
 > Entry.Run_AOTGeneric();                 // Run_AOTGeneric是私有方法，可以直接调用
 > using UnityEngine.SceneManagement;      // 导入命名空间
 > SceneManager.GetActiveScene().name      // 访问先前导入的命名空间中的类型
-main
+"main"
 > var transform = GameObject.Find("LoadDll").transform;
 > transform.localPosition = Vector3.zero; // 修改属性
 > var list = new List<int>() { 1, 2, 3 }; // 创建List
+> list                                    // 输出变量的值
+List<int>(3) {
+  1,
+  2,
+  3
+}
 > var s = "";
 > foreach (var item in list)              // 循环语句，支持多行输入
 *     s += item + ",";
 > s
-1,2,3,
-> #load "test.cs"                         // 加载当前目录（demo）下的test.cs文件，并执行其中的代码
+"1,2,3,"
+> #load "test.cs"                         // 加载当前目录（demo\Client）下的test.cs文件，并执行其中的代码
 > #reset                                  // 重置状态
 > s                                       // 之前声明的变量不存在了
 (1,1): error CS0103: The name 's' does not exist in the current context
@@ -84,8 +91,10 @@ main
 3. Runtime：编辑器中使用选择Mono，IL2CPP打包版本中使用选择IL2CPP
 3. Tool Path：GShell的可执行文件的路径
 4. Execute URL：GShell编译代码后，将发送给这个URL执行
-5. Extra Datas：GShell发送给`Execute URL`的额外数据。比如可以添加玩家ID，让游戏服务器通过它将GShell请求转发给指定的客户端执行
-6. 认证的配置
+5. Extra Assemblies: GShell发送的额外的Assembly
+    * GShell.ObjectFormatter.dll: 支持使用roslyn的CSharpObjectFormatter格式化输出对象
+6. Extra Datas：GShell发送给`Execute URL`的额外数据。比如可以添加玩家ID，让游戏服务器通过它将GShell请求转发给指定的客户端执行
+7. 认证的配置
     * Type:
       * None: 不使用认证
       * Basic: 使用Basic认证方式，需要填写账号、密码
