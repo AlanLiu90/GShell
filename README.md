@@ -9,28 +9,6 @@
 
 如果想了解实现细节，可以看这篇[博客](https://alanliu90.hatenablog.com/entry/2025/03/08/Unity%E4%B8%ADREPL%E5%8A%9F%E8%83%BD%E7%9A%84%E5%AE%9E%E7%8E%B0)
 
-## 运行demo
-
-### 在编辑器中运行
-1. 执行src\GShell\publish_win64.bat
-2. 执行demo\HttpServer\start.bat
-3. 用Unity打开demo\Client工程
-4. 打开场景：Scenes\main.unity
-5. 进入Play Mode
-6. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择EditorShellSettings
-7. 点击“Launch”
-
-### 在IL2CPP打包版本中运行
-1. 执行src\GShell\publish_win64.bat
-2. 执行demo\HttpServer\start.bat
-3. 用Unity打开demo\Client工程
-4. 安装HybridCLR：HybridCLR -> Installer
-5. 构建Player：Build -> Win64
-6. 运行Player：demo\Client\Release-Win64\HybridCLRTrial.exe
-7. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择PlayerShellSettings
-8. 点击“Compile DLLs”
-9. 点击“Launch”
-
 ### 功能示例
 ```
 > 1+2                                     // 执行表达式，输出值
@@ -71,7 +49,36 @@ List<int>(3) {
 (1,1): error CS0103: The name 's' does not exist in the current context
 ```
 
-## 配置
+## 如何运行demo
+
+### 在编辑器中运行
+1. 执行src\GShell\publish_win64.bat
+2. 执行demo\HttpServer\start.bat
+3. 用Unity打开demo\Client工程
+4. 打开场景：Scenes\main.unity
+5. 进入Play Mode
+6. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择EditorShellSettings
+7. 点击“Launch”
+
+### 在IL2CPP打包版本中运行
+1. 执行src\GShell\publish_win64.bat
+2. 执行demo\HttpServer\start.bat
+3. 用Unity打开demo\Client工程
+4. 安装HybridCLR：HybridCLR -> Installer
+5. 构建Player：Build -> Win64
+6. 运行Player：demo\Client\Release-Win64\HybridCLRTrial.exe
+7. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择PlayerShellSettings
+8. 点击“Compile DLLs”
+9. 点击“Launch”
+
+## 集成
+工具使用HTTP(S)协议和外部通信。项目可以在服务端接收GShell发送的数据，将其转发给指定的客户端执行。客户端执行之后，通过游戏服务器将结果转发回GShell
+
+demo工程中提供了集成的示例代码和配置:
+* 代码在 demo\Client\Assets\HotUpdate\TestShell.cs 和 demo\HttpServer\HttpServer.cs
+* 配置在 demo\Client\Assets\Editor 中的 EditorShellSettings.asset 和 PlayerShellSettings.asset
+
+## 配置说明
 1. 编译程序集的配置
    * 用于生成一份指定平台的dll，供GShell编译动态代码时引用
    * 在编辑器中使用时，需要将Build Target设置为`No Target`
@@ -92,7 +99,7 @@ List<int>(3) {
 3. Tool Path：GShell的可执行文件的路径
 4. Execute URL：GShell编译代码后，将发送给这个URL执行
 5. Extra Assemblies: GShell发送的额外的Assembly
-    * GShell.ObjectFormatter.dll: 支持使用roslyn的CSharpObjectFormatter格式化输出对象
+    * GShell.ObjectFormatter.dll: 支持使用roslyn的`CSharpObjectFormatter`格式化输出对象
 6. Extra Datas：GShell发送给`Execute URL`的额外数据。比如可以添加玩家ID，让游戏服务器通过它将GShell请求转发给指定的客户端执行
 7. 认证的配置
     * Type:
@@ -101,11 +108,6 @@ List<int>(3) {
       * JWT: 使用JSON Web Token认证方式，需要填写令牌
     * 具体的认证逻辑和令牌生成逻辑，可参考demo\HttpServer
     * 使用认证时，建议使用HTTPS和服务器通信
-
-## 集成
-工具使用HTTP(S)协议和外部通信。项目可以在服务端接收GShell发送的数据，将其转发给指定的客户端执行。客户端执行之后，通过游戏服务器转发回GShell
-
-demo工程中提供了集成的示例，代码在 demo\Client\Assets\HotUpdate\TestShell.cs 和 demo\HttpServer\HttpServer.cs
 
 ## 限制
 GShell中的每个输入（比如一个表达式、一条语句或者一个函数定义）都会编译为一个单独的dll，而HybridCLR支持加载最多338个dll（[文档](https://hybridclr.doc.code-philosophy.com/docs/help/faq)）
