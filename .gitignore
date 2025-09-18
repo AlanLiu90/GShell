@@ -88,3 +88,5 @@ Build-Mac
 /src/GShell/GShell.ObjectFormatter/obj
 /src/GShell/GShell.ObjectFormatter/bin
 /src/GShell/obj
+/src/GShell.UnityClient/.vs
+/src/GShell.UnityClient/obj

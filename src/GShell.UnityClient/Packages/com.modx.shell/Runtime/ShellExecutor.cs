@@ -6,8 +6,10 @@ using UnityEngine;
 
 namespace GShell
 {
-    public class ShellExecutor
+    public sealed class ShellExecutor
     {
+        public int MaximumOutputLength { get; set; } = 8 * 1024;
+
         private class SessionData
         {
             public int SubmissionCount;
@@ -15,6 +17,19 @@ namespace GShell
         }
 
         private readonly Dictionary<string, SessionData> mSessions = new Dictionary<string, SessionData>();
+        private ObjectFormatter mObjectFormatter;
+
+        public void EnsureObjectFormatterCreated(Dictionary<string, string> extraEncodedAssemblies)
+        {
+            if (mObjectFormatter == null)
+                mObjectFormatter = ObjectFormatterProvider.Instance.CreateFormatter(extraEncodedAssemblies, MaximumOutputLength);
+        }
+
+        public void EnsureObjectFormatterCreated(Dictionary<string, byte[]> extraAssemblies)
+        {
+            if (mObjectFormatter == null)
+                mObjectFormatter = ObjectFormatterProvider.Instance.CreateFormatter(extraAssemblies, MaximumOutputLength);
+        }
 
         public Task<(object, bool)> Execute(string sessionId, int submissionId, string encodedAssembly, string scriptClassName)
         {
@@ -51,23 +66,21 @@ namespace GShell
             }
             catch (Exception ex)
             {
-                // 运行到这里，表示这个会话出问题了，需要通知Shell结束会话
-
                 mSessions.Remove(sessionId);
 
                 Debug.LogException(ex);
-                return (ex, false);
+                return (TryFormatObject(ex), false);
             }
 
             try
             {
                 var obj = await (Task<object>)factoryMethod.Invoke(null, new object[] { submissionArray });
-                return (obj, true);
+                return (TryFormatObject(obj), true);
             }
             catch (Exception ex)
             {
                 Debug.LogException(ex);
-                return (ex, true);
+                return (TryFormatObject(ex), true);
             }
         }
 
@@ -94,6 +107,14 @@ namespace GShell
 
             submissionArray = data.SubmissionArray;
             return true;
+        }
+
+        private object TryFormatObject(object obj)
+        {
+            if (mObjectFormatter != null)
+                return mObjectFormatter.FormatObject(obj);
+            else
+                return obj;
         }
     }
 }

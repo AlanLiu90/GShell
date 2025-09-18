@@ -4,14 +4,27 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>8.0</LangVersion>
     <IsPackable>true</IsPackable>
-    <Version>1.0.0</Version>
+    <Version>$(GShellVersion)</Version>
+    <Deterministic>true</Deterministic>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
     <PackageReference Include="dnlib" Version="4.4.0" />
-    <PackageReference Include="Basic.Reference.Assemblies.NetStandard20" Version="1.8.3" />
-    <PackageReference Include="Basic.Reference.Assemblies.NetStandard21" Version="1.8.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GShell.ObjectFormatter\GShell.ObjectFormatter.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\GShell.ObjectFormatter\bin\$(Configuration)\netstandard2.0\GShell.ObjectFormatter.dll" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\GShell.ObjectFormatter\bin\$(Configuration)\netstandard2.0\GShell.ObjectFormatter.dll" Pack="true" PackagePath="buildTransitive\GShell.ObjectFormatter.dll" />
+    <None Include="buildTransitive\GShell.Core.targets" Pack="true" PackagePath="buildTransitive\GShell.Core.targets" />
   </ItemGroup>
 
 </Project>

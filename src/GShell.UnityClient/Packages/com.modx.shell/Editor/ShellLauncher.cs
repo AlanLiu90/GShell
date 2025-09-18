@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.Build.Player;
 using UnityEngine;
@@ -94,6 +95,9 @@ namespace GShell
                 return;
             }
 
+            if (!CanBuildPlayer(settings.BuildTarget))
+                Debug.LogWarning("The build target is not supported. If the build fails please install the corresponding Editor module.");
+
             string outputDir = Path.Combine(settings.OutputDir, settings.BuildTarget.ToString());
             CompileDll(outputDir, settings.BuildTarget, settings.Development);
         }
@@ -112,6 +116,13 @@ namespace GShell
             UnityEditor.EditorUtility.ClearProgressBar();
 #endif
             Debug.Log("Compilation finished");
+
+            if ((scriptCompilationResult.assemblies == null || scriptCompilationResult.assemblies.Count == 0) && 
+                scriptCompilationResult.typeDB == null)
+            {
+                EditorUtility.DisplayDialog("Error", "Failed to compile scripts.", "OK");
+                return;
+            }
         }
 
         private void Launch()
@@ -233,5 +244,45 @@ namespace GShell
 
             Process.Start(startInfo);
         }
+
+        private static bool CanBuildPlayer(BuildTarget target)
+        {
+#if UNITY_2021_3_OR_NEWER
+            var group = BuildPipeline.GetBuildTargetGroup(target);
+            return CanBuildPlayer(target, group, GetBuildWindowExtension(target, group));
+#else
+            return true;
+#endif
+        }
+
+#if UNITY_2021_3_OR_NEWER
+        private static object GetBuildWindowExtension(BuildTarget target, BuildTargetGroup targetGroup)
+        {
+            var moduleManagerType = typeof(EditorUserBuildSettings).Assembly.GetType("UnityEditor.Modules.ModuleManager");
+
+            var methods = moduleManagerType.GetMethods(BindingFlags.Static | BindingFlags.NonPublic).Where(x => x.Name == "GetTargetStringFrom");
+
+#if UNITY_2023_3_OR_NEWER
+            var module = methods.Where(x => x.GetParameters().Length == 1).First().Invoke(null, new object[] { target });
+#else
+            var module = methods.Where(x => x.GetParameters().Length == 2).First().Invoke(null, new object[] { targetGroup, target });
+#endif
+
+            var getBuildWindowExtension = moduleManagerType.GetMethod("GetBuildWindowExtension", BindingFlags.Static | BindingFlags.NonPublic);
+            return getBuildWindowExtension.Invoke(null, new object[] { module });
+        }
+
+        private static bool CanBuildPlayer(BuildTarget target, BuildTargetGroup targetGroup, object buildWindowExtension)
+        {
+            if (!BuildPipeline.IsBuildTargetSupported(targetGroup, target))
+                return false;
+
+            if (buildWindowExtension == null)
+                return false;
+
+            var enabledBuildButton = buildWindowExtension.GetType().GetMethod("EnabledBuildButton", BindingFlags.Instance | BindingFlags.Public);
+            return (bool)enabledBuildButton.Invoke(buildWindowExtension, null);
+        }
+#endif
     }
 }

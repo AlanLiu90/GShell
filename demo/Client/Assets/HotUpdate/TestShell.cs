@@ -28,7 +28,6 @@ public class TestShell : MonoBehaviour
     public static readonly int PlayerId = 100;
 
     private ShellExecutor mExecutor;
-    private ObjectFormatter mObjectFormatter;
 
     private void Start()
     {
@@ -69,17 +68,12 @@ public class TestShell : MonoBehaviour
         var shellData = JsonConvert.DeserializeObject<ShellPostData>(text);
 
         // The first message in each session contains extra assemblies, e.g. GShell.ObjectFormatter.dll
-        if (mObjectFormatter == null)
-            mObjectFormatter = ObjectFormatterProvider.Instance.CreateFormatter(shellData.ExtraEncodedAssemblies, 8 * 1024);
+        mExecutor.EnsureObjectFormatterCreated(shellData.ExtraEncodedAssemblies);
 
         var (result, success) = await mExecutor.Execute(shellData.SessionId, shellData.SubmissionId, shellData.EncodedAssembly, shellData.ScriptClassName);
 
-        string str = mObjectFormatter.FormatObject(result);
-
-        var shellResponse = new ShellResponse() { Result = str, Success = success };
-
+        var shellResponse = new ShellResponse() { Result = (string)result, Success = success };
         var json = JsonConvert.SerializeObject(shellResponse);
-
         tcs.SetResult(json);
     }
 }

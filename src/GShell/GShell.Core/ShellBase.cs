@@ -45,7 +45,7 @@ namespace GShell.Core
 
                     try
                     {
-                        var success = await Process(rawAssembly, scriptClassName);
+                        var success = await Process(rawAssembly, scriptClassName!);
                         if (!success)
                             return ShellExitCode.ExecutionError;
                     }

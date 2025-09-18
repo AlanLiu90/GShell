@@ -6,16 +6,16 @@ namespace GShell.Core
 {
     internal sealed class ShellMetadataReferenceResolver : MetadataReferenceResolver
     {
-        private readonly ImmutableArray<string> mSearchPaths;
+        private readonly IReferenceResolver mReferenceResolver;
 
-        public ShellMetadataReferenceResolver(ImmutableArray<string> searchPaths)
+        public ShellMetadataReferenceResolver(IReferenceResolver referenceResolver)
         {
-            mSearchPaths = searchPaths;
+            mReferenceResolver = referenceResolver;
         }
 
         public override bool ResolveMissingAssemblies => true;
 
-        public override PortableExecutableReference ResolveMissingAssembly(MetadataReference definition, AssemblyIdentity referenceIdentity)
+        public override PortableExecutableReference? ResolveMissingAssembly(MetadataReference definition, AssemblyIdentity referenceIdentity)
         {
             if (definition is PortableExecutableReference per)
                 return per;
@@ -23,19 +23,12 @@ namespace GShell.Core
             return null;
         }
 
-        public override ImmutableArray<PortableExecutableReference> ResolveReference(string reference, string baseFilePath, MetadataReferenceProperties properties)
+        public override ImmutableArray<PortableExecutableReference> ResolveReference(string reference, string? baseFilePath, MetadataReferenceProperties properties)
         {
-            foreach (var searchPath in mSearchPaths)
-            {
-                var path = Path.Combine(searchPath, reference);
-                if (File.Exists(path))
-                    return ImmutableArray.Create(MetadataReference.CreateFromFile(path, properties));
-            }
-
-            return default;
+            return mReferenceResolver.Resolve(reference, baseFilePath, properties);
         }
 
-        public override bool Equals(object other)
+        public override bool Equals(object? other)
         {
             return this == other;
         }

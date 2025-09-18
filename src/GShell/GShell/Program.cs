@@ -1,11 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Basic.Reference.Assemblies;
 using GShell.Core;
+using Microsoft.CodeAnalysis;
 
 namespace GShell
 {
@@ -27,7 +29,7 @@ namespace GShell
                 var json = File.ReadAllText(path);
                 var settings = JsonSerializer.Deserialize<ShellSettings>(json);
 
-                var targetFramework = GetTargetFramework(settings.TargetFramework);
+                var targetFramework = settings.TargetFramework;
                 var searchPaths = settings.SearchPaths;
                 var references = settings.References;
                 var usings = settings.Usings;
@@ -37,14 +39,24 @@ namespace GShell
                 var additionalAttributeType = GetAdditionalAttributeType(settings.Runtime);
                 var authenticationData = GetAuthenticationData(settings.AuthenticationType, settings.AuthenticationData);
 
-                PrintInfo(targetFramework, searchPaths, references, usings, extraAssemblies, extraDataItems);
+                PrintInfo(
+                    targetFramework,
+                    searchPaths,
+                    references,
+                    usings,
+                    extraAssemblies,
+                    extraDataItems
+                );
+
+                var targetFrameworkReferences = GetTargetFrameworkReferences(targetFramework);
+                var referenceResolver = new FileReferenceResolver(searchPaths);
 
                 bool exit = false;
                 while (!exit)
                 {
                     var context = new ShellContext(
-                        targetFramework,
-                        searchPaths,
+                        targetFrameworkReferences,
+                        referenceResolver,
                         references,
                         usings,
                         scriptClassName,
@@ -86,7 +98,7 @@ namespace GShell
         }
 
         private static void PrintInfo(
-            TargetFramework targetFramework,
+            string targetFramework,
             string[] searchPaths,
             string[] references,
             string[] usings,
@@ -149,15 +161,15 @@ namespace GShell
             Console.WriteLine(sb.ToString());
         }
 
-        private static TargetFramework GetTargetFramework(string targetFramework)
+        private static ImmutableArray<PortableExecutableReference> GetTargetFrameworkReferences(string targetFramework)
         {
             switch (targetFramework)
             {
                 case "netstandard2.0":
-                    return TargetFramework.NetStandard20;
+                    return NetStandard20.References.All;
 
                 case "netstandard2.1":
-                    return TargetFramework.NetStandard21;
+                    return NetStandard21.References.All;
 
                 default:
                     throw new NotSupportedException($"No support for {targetFramework}");
@@ -165,7 +177,7 @@ namespace GShell
         }
 
         private static AdditionalAttributeType GetAdditionalAttributeType(string runtime)
-        { 
+        {
             switch (runtime)
             {
                 case "Mono":
@@ -180,7 +192,7 @@ namespace GShell
         {
             if (!Enum.TryParse<AuthenticationType>(type, out var authType))
                 throw new NotSupportedException($"No support for {type}");
-            
+
             AuthenticationData authData;
 
             switch (authType)

@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Basic.Reference.Assemblies;
 using dnlib.DotNet;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -25,36 +24,24 @@ namespace GShell.Core
         private readonly string mAssemblyNamePrefix;
         private readonly string mScriptClassNamePrefix;
         private readonly AdditionalAttributeType mAdditionalAttributeType;
-        private readonly ILogger mLogger;
+        private readonly ILogger? mLogger;
         private readonly CSharpCompilationOptions mCompilationOptions;
 
         private int mSubmissionId = 1;
-        private CSharpCompilation mPreviousCompilation;
+        private CSharpCompilation? mPreviousCompilation;
 
         public ShellContext(
-            TargetFramework targetFramework,
-            IEnumerable<string> searchPaths,
+            ImmutableArray<PortableExecutableReference> targetFrameworkReferences,
+            IReferenceResolver referenceResolver,
             IEnumerable<string> references,
             IEnumerable<string> usings,
             string scriptClassName = "Script",
             AdditionalAttributeType additionalAttributeType = AdditionalAttributeType.None,
-            ILogger logger = null)
+            ILogger? logger = null)
         {
-            switch (targetFramework)
-            {
-                case TargetFramework.NetStandard20:
-                    mMetadataReferences = NetStandard20.References.All;
-                    break;
+            mMetadataReferences = targetFrameworkReferences;
 
-                case TargetFramework.NetStandard21:
-                    mMetadataReferences = NetStandard21.References.All;
-                    break;
-
-                default:
-                    throw new NotSupportedException($"No support for {targetFramework}");
-            }
-
-            var metadataReferenceResolver = new ShellMetadataReferenceResolver(searchPaths.ToImmutableArray());
+            var metadataReferenceResolver = new ShellMetadataReferenceResolver(referenceResolver);
 
             mCompilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
                 sourceReferenceResolver: new SourceFileResolver(ImmutableArray<string>.Empty, Directory.GetCurrentDirectory()),
@@ -81,7 +68,7 @@ namespace GShell.Core
                 throw new Exception("Failed to initialize");
         }
 
-        public (byte[], string, bool) Compile(string code)
+        public (byte[]?, string?, bool) Compile(string code)
         {
             var tree = CSharpSyntaxTree.ParseText(code, mParseOptions);
 

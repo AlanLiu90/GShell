@@ -33,11 +33,18 @@ namespace GShell
                 }
             }
 
-            var str = obj.ToString();
-            if (str.Length > mMaximumOutputLength)
-                str = str.Substring(0, mMaximumOutputLength);
+            try
+            {
+                var str = obj.ToString();
+                if (str.Length > mMaximumOutputLength)
+                    str = str.Substring(0, mMaximumOutputLength);
 
-            return str;
+                return str;
+            }
+            catch (Exception e)
+            {
+                return $"!<{e.GetType()}:{e.Message}>";
+            }
         }
     }
 }

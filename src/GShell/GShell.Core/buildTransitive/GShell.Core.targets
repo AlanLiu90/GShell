@@ -1,0 +1,7 @@
+<Project>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)GShell.ObjectFormatter.dll"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false" />
+  </ItemGroup>
+</Project>
