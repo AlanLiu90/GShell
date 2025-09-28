@@ -2,9 +2,9 @@
 
 ## 介绍
 用于Unity的REPL工具：
-1. 支持在编辑器内使用
-2. 支持在IL2CPP打包版本中使用（需要集成HybridCLR）
-3. 支持直接访问非公有的类、方法、属性、字段，不需要使用反射
+1. 支持mono，包括编辑器和打包版本
+2. 支持IL2CPP（需要集成HybridCLR）
+3. 支持直接访问非公有的类、方法、属性、字段等，不需要使用反射
 4. 支持Unity 2019+
 
 如果想了解实现细节，可以看这篇[博客](https://alanliu90.hatenablog.com/entry/2025/03/08/Unity%E4%B8%ADREPL%E5%8A%9F%E8%83%BD%E7%9A%84%E5%AE%9E%E7%8E%B0)
@@ -74,9 +74,11 @@ List<int>(3) {
 ## 集成
 工具使用HTTP(S)协议和外部通信。项目可以在服务端接收GShell发送的数据，将其转发给指定的客户端执行。客户端执行之后，通过游戏服务器将结果转发回GShell
 
-demo工程中提供了集成的示例代码和配置:
-* 代码在 demo\Client\Assets\HotUpdate\TestShell.cs 和 demo\HttpServer\HttpServer.cs
-* 配置在 demo\Client\Assets\Editor 中的 EditorShellSettings.asset 和 PlayerShellSettings.asset
+1. 引用包：com.modx.shell，参考格式：https://github.com/AlanLiu90/GShell.git?path=/src/GShell.UnityClient/Packages/com.modx.shell#1.1.0
+2. 下载 src\GShell 目录到本地，进行构建
+2. 参考demo工程，支持与GShell通信：
+   * 代码在 demo\Client\Assets\HotUpdate\TestShell.cs 和 demo\HttpServer\HttpServer.cs
+   * 配置在 demo\Client\Assets\Editor 中的 EditorShellSettings.asset 和 PlayerShellSettings.asset
 
 ## 配置说明
 1. 编译程序集的配置
@@ -100,7 +102,7 @@ demo工程中提供了集成的示例代码和配置:
 4. Execute URL：GShell编译代码后，将发送给这个URL执行
 5. Extra Assemblies: GShell发送的额外的Assembly
     * GShell.ObjectFormatter.dll: 支持使用roslyn的`CSharpObjectFormatter`格式化输出对象
-6. Extra Datas：GShell发送给`Execute URL`的额外数据。比如可以添加玩家ID，让游戏服务器通过它将GShell请求转发给指定的客户端执行
+6. Extra Datas：GShell发送给`Execute URL`的额外数据。比如可以添加玩家ID，让游戏服务器依据它将GShell的请求转发给相应的客户端执行
 7. 认证的配置
     * Type:
       * None: 不使用认证
