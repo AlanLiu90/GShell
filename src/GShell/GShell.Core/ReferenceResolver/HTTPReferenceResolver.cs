@@ -12,12 +12,12 @@ namespace GShell.Core
         private static readonly Lazy<HttpClient> mDefaultHttpClient = new Lazy<HttpClient>(() => new HttpClient());
 
         private readonly ImmutableArray<string> mSearchURLs;
-        private readonly HttpClient mHttpClient;
+        private readonly Func<HttpClient>? mHttpClientFactory;
 
-        public HTTPReferenceResolver(IEnumerable<string> searchURLs, HttpClient? httpClient = null)
+        public HTTPReferenceResolver(IEnumerable<string> searchURLs, Func<HttpClient>? httpClientFactory = null)
         {
             mSearchURLs = searchURLs.ToImmutableArray();
-            mHttpClient = httpClient ?? mDefaultHttpClient.Value;
+            mHttpClientFactory = httpClientFactory;
         }
 
         public ImmutableArray<PortableExecutableReference> Resolve(string reference, string? baseFilePath, MetadataReferenceProperties properties)
@@ -26,9 +26,10 @@ namespace GShell.Core
             {
                 try
                 {
+                    var httpClient = mHttpClientFactory != null ? mHttpClientFactory() : mDefaultHttpClient.Value;
                     var fullURL = url + reference;
 
-                    using HttpResponseMessage response = mHttpClient.GetAsync(fullURL).GetAwaiter().GetResult();
+                    using HttpResponseMessage response = httpClient.GetAsync(fullURL).GetAwaiter().GetResult();
                     response.EnsureSuccessStatusCode();
 
                     var bytes = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
