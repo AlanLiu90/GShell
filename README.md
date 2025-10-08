@@ -3,7 +3,7 @@
 ## 介绍
 用于Unity的REPL工具：
 1. 支持mono，包括编辑器和打包版本
-2. 支持IL2CPP（需要集成HybridCLR）
+2. 支持IL2CPP（需要集成[HybridCLR](https://github.com/focus-creative-games/hybridclr)）
 3. 支持直接访问非公有的类、方法、属性、字段等，不需要使用反射
 4. 支持Unity 2019+
 
@@ -72,7 +72,7 @@ List<int>(3) {
 9. 点击“Launch”
 
 ## 集成
-工具使用HTTP(S)协议和外部通信。项目可以在服务端接收GShell发送的数据，将其转发给指定的客户端执行。客户端执行之后，通过游戏服务器将结果转发回GShell
+工具使用HTTP(S)协议和外部通信。项目可以在服务端接收GShell发送的数据，将其转发给指定的客户端执行。客户端执行之后，通过服务端将结果转发回GShell
 
 1. 引用包：com.modx.shell，参考格式：https://github.com/AlanLiu90/GShell.git?path=/src/GShell.UnityClient/Packages/com.modx.shell#1.1.0
 2. 下载 src\GShell 目录到本地，进行构建
