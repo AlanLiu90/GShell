@@ -1,0 +1,26 @@
+{
+  "Shell": {
+    "TargetFramework": "netstandard2.1",
+    "SearchPaths": [
+        "../Client/Library/ScriptAssemblies",
+        "H:/UnityEditors/2022.3.60f1/Editor/Data/Managed/UnityEngine"
+    ],
+    "References": [
+        "UnityEngine.CoreModule.dll"
+    ],
+    "Usings": [
+        "System",
+        "System.Collections.Generic",
+        "System.Linq",
+        "UnityEngine"
+    ],
+    "ScriptClassName": "Script",
+    "Runtime": "Mono",
+    "ExecuteURL": "http://localhost:12345/execute",
+    "ExtraAssemblies": [
+        "GShell.ObjectFormatter.dll"
+    ],
+    "ExtraDataItems": [
+    ]
+  }
+}

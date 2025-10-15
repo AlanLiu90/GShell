@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="XtermBlazor" Version="2.1.2" />
+    <PackageReference Include="Basic.Reference.Assemblies.NetStandard20" Version="1.8.3" />
+    <PackageReference Include="Basic.Reference.Assemblies.NetStandard21" Version="1.8.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\GShell\GShell.Core\GShell.Core.csproj" />
+  </ItemGroup>
+
+</Project>

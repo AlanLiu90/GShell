@@ -54,7 +54,7 @@ namespace GShell
         public DllCompileSettings DllCompileSettings = new DllCompileSettings();
         public DynamicDllCompileSettings DynamicDllCompileSettings = new DynamicDllCompileSettings();
         public Runtime Runtime;
-        public string ToolPath;
+        public string Command;
         public string ExecuteURL;
         public string[] ExtraAssemblies;
         public ExtraDataItem[] ExtraDataItems;

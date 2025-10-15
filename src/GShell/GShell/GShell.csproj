@@ -8,6 +8,7 @@
     <ToolCommandName>gshell</ToolCommandName>
     <Version>$(GShellVersion)</Version>
     <Deterministic>true</Deterministic>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

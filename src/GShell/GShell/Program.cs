@@ -27,7 +27,7 @@ namespace GShell
 
                 var path = args[0];
                 var json = File.ReadAllText(path);
-                var settings = JsonSerializer.Deserialize<ShellSettings>(json);
+                var settings = JsonSerializer.Deserialize<ShellSettings>(json)!;
 
                 var targetFramework = settings.TargetFramework;
                 var searchPaths = settings.SearchPaths;
@@ -72,7 +72,7 @@ namespace GShell
                         authenticationData
                     );
 
-                    var ret = await shell.Run();
+                    var ret = await shell.RunAsync();
                     switch (ret)
                     {
                         case ShellExitCode.Exit:
@@ -188,18 +188,18 @@ namespace GShell
             }
         }
 
-        private static AuthenticationData GetAuthenticationData(string type, string data)
+        private static AuthenticationData? GetAuthenticationData(string type, string data)
         {
             if (!Enum.TryParse<AuthenticationType>(type, out var authType))
                 throw new NotSupportedException($"No support for {type}");
 
-            AuthenticationData authData;
+            AuthenticationData? authData;
 
             switch (authType)
             {
                 case AuthenticationType.Basic:
                 case AuthenticationType.JWT:
-                    authData = JsonSerializer.Deserialize<AuthenticationData>(data);
+                    authData = JsonSerializer.Deserialize<AuthenticationData>(data)!;
                     authData.Type = authType;
                     break;
 

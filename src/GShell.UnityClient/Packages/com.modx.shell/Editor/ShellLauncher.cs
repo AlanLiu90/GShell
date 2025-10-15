@@ -52,8 +52,8 @@ namespace GShell
 
             GUI.enabled = mSettings != null && mSettings.DllCompileSettings.BuildTarget != BuildTarget.NoTarget;
 
-            if (GUILayout.Button("Compile DLLs"))
-                CompileDlls();
+            if (GUILayout.Button("Compile Scripts"))
+                CompileScripts();
 
             GUI.enabled = true;
 
@@ -79,7 +79,7 @@ namespace GShell
             }
         }
 
-        private void CompileDlls()
+        private void CompileScripts()
         {
             if (mSettings == null)
             {
@@ -99,10 +99,10 @@ namespace GShell
                 Debug.LogWarning("The build target is not supported. If the build fails please install the corresponding Editor module.");
 
             string outputDir = Path.Combine(settings.OutputDir, settings.BuildTarget.ToString());
-            CompileDll(outputDir, settings.BuildTarget, settings.Development);
+            CompileScripts(outputDir, settings.BuildTarget, settings.Development);
         }
 
-        private static void CompileDll(string buildDir, BuildTarget target, bool developmentBuild)
+        private static void CompileScripts(string buildDir, BuildTarget target, bool developmentBuild)
         {
             var group = BuildPipeline.GetBuildTargetGroup(target);
 
@@ -155,7 +155,7 @@ namespace GShell
                 searchPaths.Add(Path.GetFullPath(dllDir));
             }
 
-            if (string.IsNullOrEmpty(mSettings.ToolPath))
+            if (string.IsNullOrEmpty(mSettings.Command))
             {
                 Debug.LogError("ToolPath is empty");
                 return;
@@ -192,10 +192,16 @@ namespace GShell
                 {
                     if (string.IsNullOrEmpty(data.Key))
                     {
-                        Debug.Log("Key is empty in ExtraData");
+                        Debug.LogError("Key is empty in ExtraData");
                         return;
                     }
                 }
+            }
+
+            if (!ParseCommand(mSettings.Command, out var fileName, out var arguments))
+            {
+                Debug.LogError("Failed to parse Command");
+                return;
             }
 
             // Save settings
@@ -222,27 +228,56 @@ namespace GShell
             File.WriteAllText(TempSettingPath, json);
 
             // Start GShell
-            string toolPath = mSettings.ToolPath;
             string settingPath = TempSettingPath;
 
-            toolPath = Path.Combine(Directory.GetCurrentDirectory(), toolPath);
-
-            if (Application.platform == RuntimePlatform.WindowsEditor)
-            {
-                toolPath = toolPath.Replace("/", "\\");
-                settingPath = settingPath.Replace("/", "\\");
-            }
+            Debug.LogFormat("Start process: {0} {1} {2}", fileName, arguments, settingPath);
 
             var startInfo = new ProcessStartInfo
             {
                 UseShellExecute = true,
                 CreateNoWindow = false,
-                FileName = toolPath,
-                Arguments = settingPath,
+                FileName = fileName,
+                Arguments = $"{arguments} {settingPath}",
                 WorkingDirectory = Directory.GetCurrentDirectory(),
             };
 
             Process.Start(startInfo);
+        }
+
+        private static bool ParseCommand(string cmd, out string fileName, out string arguments)
+        {
+            fileName = null;
+            arguments = null;
+
+            cmd = cmd?.Trim();
+            if (string.IsNullOrEmpty(cmd))
+                return false;
+
+            if (cmd.StartsWith("\"", StringComparison.Ordinal))
+            {
+                int index = cmd.IndexOf('"', 1);
+                if (index < 0)
+                    return false;
+
+                fileName = cmd.Substring(1, index - 1);
+                arguments = cmd.Substring(index + 1);
+            }
+            else
+            {
+                int index = cmd.IndexOf(' ', 0);
+                if (index >= 0)
+                {
+                    fileName = cmd.Substring(0, index);
+                    arguments = cmd.Substring(index + 1);
+                }
+                else
+                {
+                    fileName = cmd;
+                    arguments = string.Empty;
+                }
+            }
+
+            return !string.IsNullOrEmpty(fileName);
         }
 
         private static bool CanBuildPlayer(BuildTarget target)

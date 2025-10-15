@@ -90,3 +90,6 @@ Build-Mac
 /src/GShell/obj
 /src/GShell.UnityClient/.vs
 /src/GShell.UnityClient/obj
+/demo/GShell.Web/obj
+/demo/GShell.Web/.vs
+/demo/GShell.Web/bin

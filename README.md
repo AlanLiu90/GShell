@@ -1,6 +1,5 @@
 # GShell
 
-## 介绍
 用于Unity的REPL工具：
 1. 支持mono，包括编辑器和打包版本
 2. 支持IL2CPP（需要集成[HybridCLR](https://github.com/focus-creative-games/hybridclr)）
@@ -8,6 +7,17 @@
 4. 支持Unity 2019+
 
 如果想了解实现细节，可以看这篇[博客](https://alanliu90.hatenablog.com/entry/2025/03/08/Unity%E4%B8%ADREPL%E5%8A%9F%E8%83%BD%E7%9A%84%E5%AE%9E%E7%8E%B0)
+
+## 目录
+
+- [功能示例](#功能示例)
+- [如何运行demo](#如何运行demo)
+    - [在编辑器中运行](#在编辑器中运行)
+    - [在IL2CPP打包版本中运行](#在IL2CPP打包版本中运行)
+    - [使用网页版GShell](#使用网页版GShell)
+- [集成](#集成)	
+- [配置说明](#配置说明)	
+- [限制](#限制)	
 
 ### 功能示例
 ```
@@ -26,6 +36,12 @@
 (1,1): error CS0103: The name 'Entry' does not exist in the current context
 > #r "HotUpdate.dll"                      // 引用HotUpdate.dll（推荐在配置中填上常用的dll，避免每次启动都需要手动引用）
 > Entry.Run_AOTGeneric();                 // Run_AOTGeneric是私有方法，可以直接调用
+> new Entry.MyVec3()                      // MyVec3是私有类，可以直接访问
+[Entry+MyVec3] {
+  x: 0,
+  y: 0,
+  z: 0
+}
 > using UnityEngine.SceneManagement;      // 导入命名空间
 > SceneManager.GetActiveScene().name      // 访问先前导入的命名空间中的类型
 "main"
@@ -52,29 +68,43 @@ List<int>(3) {
 ## 如何运行demo
 
 ### 在编辑器中运行
-1. 执行src\GShell\publish_win64.bat
-2. 执行demo\HttpServer\start.bat
-3. 用Unity打开demo\Client工程
-4. 打开场景：Scenes\main.unity
-5. 进入Play Mode
-6. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择EditorShellSettings
-7. 点击“Launch”
+1. 用Unity打开demo\Client工程
+2. 启动HTTP Server：Demo -> Start HTTP Server
+3. 打开场景：Scenes\main.unity
+4. 进入Play Mode
+5. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择EditorShellSettings
+6. 点击“Launch”
 
 ### 在IL2CPP打包版本中运行
-1. 执行src\GShell\publish_win64.bat
-2. 执行demo\HttpServer\start.bat
-3. 用Unity打开demo\Client工程
-4. 安装HybridCLR：HybridCLR -> Installer
-5. 构建Player：Build -> Win64
-6. 运行Player：demo\Client\Release-Win64\HybridCLRTrial.exe
-7. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择PlayerShellSettings
-8. 点击“Compile DLLs”
-9. 点击“Launch”
+1. 用Unity打开demo\Client工程
+2. 启动HTTP Server：Demo -> Start HTTP Server
+3. 安装HybridCLR：HybridCLR -> Installer
+4. 构建Player：Build -> Win64
+5. 运行Player：demo\Client\Release-Win64\HybridCLRTrial.exe
+6. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择PlayerShellSettings
+7. 点击“Compile Scripts”
+8. 点击“Launch”
+
+### 使用网页版GShell
+> 以在编辑器中运行为例
+
+1. 用Unity打开demo\Client工程
+2. 启动HTTP Server：Demo -> Start HTTP Server
+3. 打开场景：Scenes\main.unity
+4. 进入Play Mode
+5. 修改GShell.Web的配置：demo\GShell.Web\shellsettings.json
+    1. TargetFramework：根据使用的Unity版本，填写 netstandard2.0 或 netstandard2.1
+    2. SearchPaths：根据本地的Unity的安装目录，修改路径
+6. 运行GShell.Web（任选以下一种方式）
+    * 在Visual Studio中打开 demo\GShell.Web\GShell.Web.sln，按F5运行（会自动打开浏览器）
+    * 在 demo\GShell.Web 目录执行`dotnet run GShell.Web.csproj`，并在浏览器中打开 http://localhost:5052/
+7. 在PlayerId的输入框中输入100（100为demo的客户端配置的默认值）
+8. 点击“Start”
 
 ## 集成
 工具使用HTTP(S)协议和外部通信。项目可以在服务端接收GShell发送的数据，将其转发给指定的客户端执行。客户端执行之后，通过服务端将结果转发回GShell
 
-1. 引用包：com.modx.shell，参考格式：https://github.com/AlanLiu90/GShell.git?path=/src/GShell.UnityClient/Packages/com.modx.shell#1.1.0
+1. 引用包：com.modx.shell，参考格式：https://github.com/AlanLiu90/GShell.git?path=/src/GShell.UnityClient/Packages/com.modx.shell#v1.1.0
 2. 下载 src\GShell 目录到本地，进行构建
 2. 参考demo工程，支持与GShell通信：
    * 代码在 demo\Client\Assets\HotUpdate\TestShell.cs 和 demo\HttpServer\HttpServer.cs
@@ -98,7 +128,7 @@ List<int>(3) {
       * UnityEngine
    * Script Class Name：编译动态代码时，自动创建的类型名，一般不需要修改
 3. Runtime：编辑器中使用选择Mono，IL2CPP打包版本中使用选择IL2CPP
-3. Tool Path：GShell的可执行文件的路径
+3. Command：运行GShell的命令
 4. Execute URL：GShell编译代码后，将发送给这个URL执行
 5. Extra Assemblies: GShell发送的额外的Assembly
     * GShell.ObjectFormatter.dll: 支持使用roslyn的`CSharpObjectFormatter`格式化输出对象
@@ -112,4 +142,4 @@ List<int>(3) {
     * 使用认证时，建议使用HTTPS和服务器通信
 
 ## 限制
-GShell中的每个输入（比如一个表达式、一条语句或者一个函数定义）都会编译为一个单独的dll，而HybridCLR支持加载最多338个dll（[文档](https://hybridclr.doc.code-philosophy.com/docs/help/faq)）
+GShell中的每个输入（比如一个表达式、一条语句或者一个函数定义）都会编译为一个单独的dll，而HybridCLR支持加载最多338个dll（[文档](https://hybridclr.doc.code-philosophy.com/docs/help/faq)）。这条限制仅适用于IL2CPP

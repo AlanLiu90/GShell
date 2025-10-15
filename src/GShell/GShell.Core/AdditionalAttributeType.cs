@@ -4,6 +4,6 @@
     {
         None,
         SecurityPermission,
-        IgnoresAccessChecksTo, // 暂未实现
+        IgnoresAccessChecksTo, // Not implemented
     }
 }

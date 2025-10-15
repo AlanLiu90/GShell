@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using GShell.Core;
 
-namespace GShell
+namespace GShell.Web.Shell
 {
-    internal class GShell : ShellBase
+    internal sealed class Shell : ShellBase
     {
         private sealed class Response
         {
@@ -24,41 +24,40 @@ namespace GShell
         private readonly string mURL;
         private readonly Dictionary<string, string> mExtraData;
         private readonly Dictionary<string, string>? mExtraEncodedAssemblies;
-        private readonly AuthenticationData? mAuthenticationData;
+        private readonly SemaphoreSlim mInputSemaphore;
+        private readonly Channel<string> mInputChannel;
+        private readonly Channel<string> mOutputChannel;
         private readonly HttpClient mHttpClient;
 
-        public GShell(
+        public Shell(
             ShellContext context,
             string url,
             string[] extraAssemblies,
             Dictionary<string, string> extraData,
-            AuthenticationData? authenticationData
+            SemaphoreSlim inputSemaphore,
+            Channel<string> inputChannel,
+            Channel<string> outputChannel
         )
             : base(context)
         {
             mURL = url;
             mExtraEncodedAssemblies = LoadExtraAssemblies(extraAssemblies);
             mExtraData = extraData;
-            mAuthenticationData = authenticationData;
+            mInputSemaphore = inputSemaphore;
+            mInputChannel = inputChannel;
+            mOutputChannel = outputChannel;
             mHttpClient = new HttpClient();
-
-            SetRequestHeaders();
         }
 
         protected override ValueTask<string> ReadLineAsync(CancellationToken cancellationToken = default)
         {
-            return Console.In.ReadLineAsync(cancellationToken)!;
+            mInputSemaphore!.Release();
+            return mInputChannel.Reader.ReadAsync(cancellationToken);
         }
 
         protected override ValueTask WriteAsync(string s, CancellationToken cancellationToken = default)
         {
-            Console.Write(s);
-            return ValueTask.CompletedTask;
-        }
-
-        protected override ValueTask WriteLineAsync(string s, CancellationToken cancellationToken = default)
-        {
-            Console.WriteLine(s);
+            mOutputChannel.Writer.WriteAsync(s, cancellationToken);
             return ValueTask.CompletedTask;
         }
 
@@ -66,7 +65,8 @@ namespace GShell
         {
             int submissionId = mContext.SubmissionId - 1;
 
-            var obj = new {
+            var obj = new
+            {
                 SessionId = mContext.SessionId,
                 SubmissionId = submissionId,
                 EncodedAssembly = Convert.ToBase64String(rawAssembly),
@@ -84,7 +84,7 @@ namespace GShell
             json = await response.Content.ReadAsStringAsync(cancellationToken);
             if (string.IsNullOrEmpty(json))
             {
-                await WriteLineAsync("The response is empty");
+                await WriteLineAsync("The response is empty", cancellationToken);
                 return false;
             }
 
@@ -92,13 +92,13 @@ namespace GShell
 
             if (resp == null || !resp.Success)
             {
-                await WriteLineAsync($"Failed to execute script: {resp?.Result}");
+                await WriteLineAsync($"Failed to execute script: {resp?.Result}", cancellationToken);
                 return false;
             }
 
             if (!string.IsNullOrEmpty(resp.Result))
             {
-                await WriteLineAsync(resp.Result);
+                await WriteLineAsync(resp.Result, cancellationToken);
             }
 
             return true;
@@ -137,44 +137,6 @@ namespace GShell
             }
 
             return encodedAssemblies;
-        }
-
-        private void SetRequestHeaders()
-        {
-            if (mAuthenticationData == null)
-                return;
-
-            switch (mAuthenticationData.Type)
-            {
-                case AuthenticationType.Basic:
-                    {
-                        if (string.IsNullOrEmpty(mAuthenticationData.UserName))
-                            throw new Exception("UserName is empty");
-
-                        if (mAuthenticationData.UserName.Contains(':'))
-                            throw new Exception("UserName contains ':'");
-
-                        if (string.IsNullOrEmpty(mAuthenticationData.Password))
-                            throw new Exception("Password is empty");
-
-                        var authenticationString = $"{mAuthenticationData.UserName}:{mAuthenticationData.Password}";
-                        var base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.ASCII.GetBytes(authenticationString));
-
-                        mHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
-
-                        break;
-                    }
-
-                case AuthenticationType.JWT:
-                    {
-                        if (string.IsNullOrEmpty(mAuthenticationData.Token))
-                            throw new Exception("Token is empty");
-
-                        mHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", mAuthenticationData.Token);
-
-                        break;
-                    }
-            }
         }
     }
 }

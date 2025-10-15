@@ -1,0 +1,651 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+<PageTitle>GShell.Web</PageTitle>
+
+@using System.Collections.Immutable
+@using System.Threading
+@using System.Threading.Channels
+@using System.Diagnostics
+@using Basic.Reference.Assemblies
+@using GShell.Core
+@using Microsoft.CodeAnalysis
+@using Microsoft.Extensions.Logging
+@using Microsoft.Extensions.Options
+@implements IDisposable
+@inject IJSRuntime JS
+@inject IUnicodeVersionProvider UnicodeVersionProvider
+@inject IOptions<ShellSettings> ShellSettings
+@inject ILogger<Terminal> Logger
+
+<script>
+	window.browserResize = {
+		handler: null,
+
+		subscribe: function (dotNetHelper) {
+			this.handler = function () {
+				dotNetHelper.invokeMethodAsync('OnBrowserResize');
+			};
+
+			window.addEventListener('resize', this.handler);
+		},
+
+		unsubscribe: function () {
+			if (this.handler) {
+				window.removeEventListener('resize', this.handler);
+				this.handler = null;
+			}
+		}
+	};
+</script>
+
+<div class="card shadow-sm">
+	<div class="card-body">
+		<div class="row align-items-center gx-2">
+			<div class="col-auto">
+				<label class="col-form-label mb-0">PlayerId:</label>
+			</div>
+			<div class="col-auto">
+				<input class="form-control" style="width: 220px;" @bind="mPlayerId" disabled="@(mIsRunning)" />
+			</div>
+
+			<div class="col-auto">
+				@if (mCTS == null)
+				{
+					<button class="btn btn-primary" @onclick='StartShell' disabled="@(mIsRunning)">@(mIsRunning ? "Initializing" : "Start")</button>
+				}
+				else
+				{
+					<button class="btn btn-primary" @onclick='StopShell'>Stop</button>
+				}
+			</div>
+		</div>
+	</div>
+</div>
+
+@if (mShowTerminal)
+{
+	<Xterm @ref="mTerminal"
+		   Options="mOptions"
+		   Addons="mAddons"
+		   OnFirstRender="@OnFirstRender"
+		   OnData="OnData"
+		   Class="mt-3"
+		   Style="flex: 1;" />
+}
+
+@if (mMessages.Count > 0)
+{
+	<div class="alert alert-danger mt-3" role="alert">
+		<strong>Errors:</strong>
+		<ul class="mb-0">
+			@foreach (var msg in mMessages)
+			{
+				<li>@msg</li>
+			}
+		</ul>
+	</div>
+}
+
+@code {
+	private readonly TerminalOptions mOptions = new TerminalOptions
+	{
+		CursorBlink = true,
+		CursorStyle = CursorStyle.Bar,
+		CursorInactiveStyle = CursorInactiveStyle.None,
+		Theme =
+		{
+			Background = "#000000",
+		},
+	};
+
+	private readonly HashSet<string> mAddons = new HashSet<string>()
+	{
+		"addon-fit",
+	};
+
+	private string? mPlayerId;
+	private readonly List<string> mMessages = new List<string>();
+	private CancellationTokenSource? mCTS;
+
+	private Xterm? mTerminal;
+	private bool mIsRunning;
+	private bool mShowTerminal;
+	private bool mTerminalAcceptInput;
+	private Channel<string>? mXTermInputChannel;
+	private Channel<string>? mShellInputChannel;
+	private Channel<string>? mShellOutputChannel;
+	private SemaphoreSlim? mInputSemaphore;
+	private TaskCompletionSource? mTerminalFirstRenderTCS;
+
+	private readonly List<string> mInputHistories = new List<string>();
+	private int mHistoryIndex;
+	private int mInputPosition;
+
+	private DotNetObjectReference<Terminal>? mObjRef;
+
+	public async void Dispose()
+	{
+		StopShell();
+
+		if (mObjRef != null)
+		{
+			try
+			{
+				await JS.InvokeVoidAsync("browserResize.unsubscribe");
+			}
+			catch (JSDisconnectedException)
+			{
+				// Ignore
+			}
+
+			mObjRef.Dispose();
+			mObjRef = null;
+		}
+	}
+
+	[JSInvokable]
+	public async void OnBrowserResize()
+	{
+		if (mShowTerminal)
+			await mTerminal!.Addon("addon-fit").InvokeVoidAsync("fit");
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			mObjRef = DotNetObjectReference.Create(this);
+			await JS.InvokeVoidAsync("browserResize.subscribe", mObjRef);
+		}
+	}
+
+	private async Task StartShell()
+	{
+		if (mCTS != null || mIsRunning)
+			return;
+
+		mShowTerminal = false;
+		mMessages.Clear();
+
+		if (!int.TryParse(mPlayerId, out var playerId) || playerId <= 0)
+		{
+			mMessages.Add("Failed to parse PlayerId");
+			return;
+		}
+
+		mIsRunning = true;
+
+		StateHasChanged();
+
+		// Allow XTerm to be recreated
+		await Task.Delay(1);
+
+		try
+		{
+			mShowTerminal = true;
+			mTerminalAcceptInput = true;
+			mTerminalFirstRenderTCS = new TaskCompletionSource();
+			mXTermInputChannel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions
+			{
+				AllowSynchronousContinuations = false,
+				SingleWriter = true,
+				SingleReader = true,
+			});
+			mShellInputChannel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions
+			{
+				AllowSynchronousContinuations = false,
+				SingleWriter = true,
+				SingleReader = true,
+			});
+			mShellOutputChannel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions
+			{
+				AllowSynchronousContinuations = false,
+				SingleWriter = true,
+				SingleReader = true,
+			});
+			mInputSemaphore = new SemaphoreSlim(0, 1);
+			mCTS = new CancellationTokenSource();
+
+			mInputHistories.Clear();
+			mInputHistories.Add("");
+			mHistoryIndex = 0;
+			mInputPosition = 0;
+
+			StateHasChanged();
+
+			var extraData = new Dictionary<string, string>();
+			extraData.Add("PlayerId", playerId.ToString());
+
+			await Process(extraData, mCTS.Token);
+		}
+		finally
+		{
+			mIsRunning = false;
+
+			mCTS?.Dispose();
+			mCTS = null;
+		}
+	}
+
+	private void StopShell()
+	{
+		if (mTerminal != null)
+		{
+			var options = new TerminalOptions
+			{
+				CursorBlink = false,
+			};
+
+			mTerminal.SetOptions(options);
+		}
+
+		mTerminalAcceptInput = false;
+		mXTermInputChannel?.Writer?.Complete();
+		mXTermInputChannel = null;
+		mShellInputChannel?.Writer?.Complete();
+		mShellInputChannel = null;
+		mShellOutputChannel?.Writer?.Complete();
+		mShellOutputChannel = null;
+		mInputSemaphore?.Dispose();
+		mCTS?.Cancel();
+	}
+
+	private async Task OnFirstRender()
+	{
+		await mTerminal!.Addon("addon-fit").InvokeVoidAsync("fit");
+		await mTerminal.Focus();
+
+		await mTerminal.SetCustomKeyEventHandler(@"
+function (event) {
+	if (event.type === 'keydown' && event.code === 'KeyV' && event.ctrlKey && !event.altKey && !event.metaKey) {
+		return false;
+	} else if (event.type === 'keydown' && event.code === 'KeyC' && event.ctrlKey && !event.altKey && !event.metaKey) {
+		return false;
+	} else if (event.type === 'keydown' && event.code === 'F5' && !event.ctrlKey && !event.altKey && !event.metaKey) {
+		return false;
+	}
+
+	return true;
+}");
+
+		mTerminalFirstRenderTCS!.SetResult();
+	}
+
+	private void OnData(string data)
+	{
+		if (!mTerminalAcceptInput)
+			return;
+
+		if (data.Length == 0)
+			return;
+
+		mXTermInputChannel!.Writer.TryWrite(data);
+	}
+
+	private async Task Process(Dictionary<string, string> extraData, CancellationToken cancellationToken)
+	{
+		try
+		{
+			StartProcessInput(cancellationToken);
+			StartProcessOutput(cancellationToken);
+
+			// Wait for XTerm to finish initializing
+			await mTerminalFirstRenderTCS!.Task;
+
+			var settings = ShellSettings.Value;
+			var targetFramework = settings.TargetFramework;
+			var searchPaths = settings.SearchPaths;
+			var references = settings.References;
+			var usings = settings.Usings;
+			var scriptClassName = settings.ScriptClassName;
+			var extraAssemblies = settings.ExtraAssemblies;
+			var extraDataItems = settings.ExtraDataItems ?? Array.Empty<ExtraDataItem>();
+			var additionalAttributeType = GetAdditionalAttributeType(settings.Runtime);
+
+			var targetFrameworkReferences = GetTargetFrameworkReferences(targetFramework);
+			var referenceResolver = new FileReferenceResolver(searchPaths);
+			extraData = extraDataItems
+				.Concat(extraData.Select(x => new ExtraDataItem { Key = x.Key, Value = x.Value }))
+				.ToDictionary(x => x.Key, x => x.Value);
+
+			var logger = new Logger(mShellOutputChannel!);
+
+			bool exit = false;
+			while (!exit)
+			{
+				var context = new ShellContext(
+					targetFrameworkReferences,
+					referenceResolver,
+					references,
+					usings,
+					scriptClassName,
+					additionalAttributeType,
+					logger
+				);
+
+				var shell = new Shell(
+					context,
+					settings.ExecuteURL,
+					extraAssemblies,
+					extraData,
+					mInputSemaphore!,
+					mShellInputChannel!,
+					mShellOutputChannel!
+				);
+
+				var ret = await shell.RunAsync(cancellationToken);
+				switch (ret)
+				{
+					case ShellExitCode.Exit:
+						exit = true;
+						break;
+
+					case ShellExitCode.Reset:
+					case ShellExitCode.ExecutionError:
+					default:
+						await mShellOutputChannel!.Writer.WriteAsync("Reset session" + Environment.NewLine);
+						break;
+				}
+			}
+
+			StopShell();
+		}
+		catch (OperationCanceledException)
+		{
+			// Ignore
+		}
+		catch (ChannelClosedException)
+		{
+			// Ignore
+		}
+		catch (Exception e)
+		{
+			Logger.LogError(e, "Error in Process");
+		}
+	}
+
+	private async void StartProcessInput(CancellationToken cancellationToken)
+	{
+		try
+		{
+			// Wait until input processing is allowed
+			await mInputSemaphore!.WaitAsync(cancellationToken);
+
+			while (!cancellationToken.IsCancellationRequested)
+			{
+				var data = await mXTermInputChannel!.Reader.ReadAsync(cancellationToken);
+
+				int index = 0;
+
+				while (index < data.Length)
+				{
+					if (char.IsControl(data[index]))
+					{
+						if (ProcessControlSequence(data, ref index))
+						{
+							// Wait until the current line processing is complete
+							await mInputSemaphore.WaitAsync(cancellationToken);
+						}
+					}
+					else
+					{
+						var s = data.Substring(index, 1);
+
+						var line = mInputHistories[^1];
+						Debug.Assert(mInputPosition >= 0 && mInputPosition <= line.Length);
+
+						if (mInputPosition >= line.Length)
+						{
+							line += s;
+							mInputPosition = line.Length;
+							await mTerminal!.Write(s);
+						}
+						else
+						{
+							line = line.Substring(0, mInputPosition) + s + line.Substring(mInputPosition);
+							mInputPosition++;
+
+							int width = UnicodeVersionProvider.GetWidth(s);
+
+							await mTerminal!.Write($"\x1b[{width}@");
+							await mTerminal.Write(s);
+						}
+
+						mInputHistories[^1] = line;
+
+						index += 1;
+					}
+				}
+			}
+		}
+		catch (OperationCanceledException)
+		{
+			// Ignore
+		}
+		catch (ChannelClosedException)
+		{
+			// Ignore
+		}
+		catch (Exception e)
+		{
+			Logger.LogError(e, "Error in ProcessInput");
+		}
+	}
+
+	private bool ProcessControlSequence(string data, ref int index)
+	{
+		var span = data.AsSpan();
+
+		if (span[index] == '\r')
+		{
+			// Enter
+
+			var line = mInputHistories[^1];
+
+			if (mHistoryIndex == mInputHistories.Count - 1 || line != mInputHistories[mHistoryIndex])
+				mHistoryIndex = mInputHistories.Count;
+			else
+				mHistoryIndex++;
+
+			mInputHistories.Add("");
+			mInputPosition = 0;
+
+			mTerminal!.WriteLine("");
+			mShellInputChannel!.Writer.TryWrite(line);
+
+			index += 1;
+
+			return true;
+		}
+		else if (span[index] == '\u007f')
+		{
+			// Backspace
+
+			if (mInputPosition > 0)
+			{
+				var line = mInputHistories[^1];
+
+				int width = UnicodeVersionProvider.GetWidth(line[mInputPosition - 1]);
+
+				if (mInputPosition >= line.Length)
+				{
+					var s1 = new string('\b', width);
+					var s2 = new string(' ', width);
+
+					mTerminal!.Write(s1 + s2 + s1);
+				}
+				else
+				{
+					mTerminal!.Write($"\x1b[{width}D");
+					mTerminal.Write($"\x1b[{width}P");
+				}
+
+				line = line.Substring(0, mInputPosition - 1) + line.Substring(mInputPosition);
+				mInputHistories[^1] = line;
+				mInputPosition--;
+			}
+
+			index += 1;
+		}
+		else if (span.Slice(index).StartsWith("\u001b[A", StringComparison.Ordinal))
+		{
+			// ArrowUp
+
+			if (mHistoryIndex > 0)
+			{
+				mHistoryIndex--;
+
+				var line = mInputHistories[mHistoryIndex];
+				mInputHistories[^1] = line;
+				mInputPosition = line.Length;
+
+				mTerminal!.Write("\x1b[3G\x1b[0K");
+				mTerminal.Write(line);
+			}
+
+			index += "\u001b[A".Length;
+		}
+		else if (span.Slice(index).StartsWith("\u001b[B", StringComparison.Ordinal))
+		{
+			// ArrowDown
+
+			if (mHistoryIndex < mInputHistories.Count - 1)
+			{
+				mHistoryIndex++;
+
+				var line = mInputHistories[mHistoryIndex];
+				mInputHistories[^1] = line;
+				mInputPosition = line.Length;
+
+				mTerminal!.Write("\x1b[3G\x1b[0K");
+				mTerminal.Write(line);
+			}
+
+			index += "\u001b[B".Length;
+		}
+		else if (span.Slice(index).StartsWith("\u001b[C", StringComparison.Ordinal))
+		{
+			// ArrowRight
+
+			var line = mInputHistories[^1];
+			if (mInputPosition < line.Length)
+			{
+				int width = UnicodeVersionProvider.GetWidth(line[mInputPosition]);
+
+				mInputPosition++;
+				mTerminal!.Write($"\x1b[{width}C");
+			}
+
+			index += "\u001b[C".Length;
+		}
+		else if (span.Slice(index).StartsWith("\u001b[D", StringComparison.Ordinal))
+		{
+			// ArrowLeft
+
+			if (mInputPosition > 0)
+			{
+				var line = mInputHistories[^1];
+				int width = UnicodeVersionProvider.GetWidth(line[mInputPosition - 1]);
+
+				mInputPosition--;
+				mTerminal!.Write($"\x1b[{width}D");
+			}
+
+			index += "\u001b[D".Length;
+		}
+		else if (span.Slice(index).StartsWith("\u001b[F", StringComparison.Ordinal))
+		{
+			// End
+
+			var line = mInputHistories[^1];
+			if (mInputPosition < line.Length)
+			{
+				int width = UnicodeVersionProvider.GetWidth(line, mInputPosition);
+
+				mTerminal!.Write($"\x1b[{width}C");
+				mInputPosition = line.Length;
+			}
+
+			index += "\u001b[F".Length;
+		}
+		else if (span.Slice(index).StartsWith("\u001b[H", StringComparison.Ordinal))
+		{
+			// Home
+
+			if (mInputPosition > 0)
+			{
+				var line = mInputHistories[^1];
+				int width = UnicodeVersionProvider.GetWidth(line, 0, mInputPosition);
+
+				mTerminal!.Write($"\x1b[{width}D");
+				mInputPosition = 0;
+			}
+
+			index += "\u001b[H".Length;
+		}
+		else
+		{
+			// Ignore unknown control characters
+
+			index += 1;
+		}
+
+		return false;
+	}
+
+	private async void StartProcessOutput(CancellationToken cancellationToken)
+	{
+		try
+		{
+			while (!cancellationToken.IsCancellationRequested)
+			{
+				var log = await mShellOutputChannel!.Reader.ReadAsync(cancellationToken);
+
+				// xterm.js expects "\r\n"
+				log = log.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
+
+				await mTerminal!.Write(log);
+			}
+		}
+		catch (OperationCanceledException)
+		{
+			// Ignore
+		}
+		catch (ChannelClosedException)
+		{
+			// Ignore
+		}
+		catch (Exception e)
+		{
+			Logger.LogError(e, "Error in ProcessOutput");
+		}
+	}
+
+	private static AdditionalAttributeType GetAdditionalAttributeType(string runtime)
+	{
+		switch (runtime)
+		{
+			case "Mono":
+				return AdditionalAttributeType.SecurityPermission;
+
+			default:
+				return AdditionalAttributeType.None;
+		}
+	}
+
+	private static ImmutableArray<PortableExecutableReference> GetTargetFrameworkReferences(string targetFramework)
+	{
+		switch (targetFramework)
+		{
+			case "netstandard2.0":
+				return NetStandard20.References.All;
+
+			case "netstandard2.1":
+				return NetStandard21.References.All;
+
+			default:
+				throw new NotSupportedException($"No support for {targetFramework}");
+		}
+	}
+}

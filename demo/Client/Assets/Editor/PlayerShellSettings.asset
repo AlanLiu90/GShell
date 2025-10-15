@@ -27,7 +27,7 @@ MonoBehaviour:
     - UnityEngine
     ScriptClassName: Script
   Runtime: 0
-  ToolPath: ../../src/GShell/publish/GShell.exe
+  Command: dotnet run --project ../../src/GShell/GShell/GShell.csproj --
   ExecuteURL: http://localhost:12345/execute
   ExtraAssemblies:
   - GShell.ObjectFormatter.dll

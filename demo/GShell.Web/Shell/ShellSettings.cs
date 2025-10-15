@@ -1,15 +1,15 @@
 ﻿using System;
 
-namespace GShell
+namespace GShell.Web.Shell
 {
     [Serializable]
-    public struct ExtraDataItem
+    internal struct ExtraDataItem
     {
         public string Key { get; set; }
         public string Value { get; set; }
     }
 
-    public class ShellSettings
+    internal class ShellSettings
     {
         public required string TargetFramework { get; set; }
         public required string[] SearchPaths { get; set; }
@@ -20,7 +20,5 @@ namespace GShell
         public required string ExecuteURL { get; set; }
         public required string[] ExtraAssemblies { get; set; }
         public required ExtraDataItem[] ExtraDataItems { get; set; }
-        public required string AuthenticationType { get; set; }
-        public required string AuthenticationData { get; set; }
     }
 }

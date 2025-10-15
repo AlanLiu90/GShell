@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -16,22 +17,22 @@ namespace GShell.Core
             mContext = context;
         }
 
-        public async Task<ShellExitCode> Run()
+        public async Task<ShellExitCode> RunAsync(CancellationToken cancellationToken = default)
         {
             while (true)
             {
-                Console.Write("> ");
+                await WriteAsync("> ", cancellationToken);
 
-                string line = await Console.In.ReadLineAsync();
+                string line = await ReadLineAsync(cancellationToken);
                 if (!string.IsNullOrEmpty(line))
                 {
                     string str = line;
 
                     while (!IsCompleteSubmission(str))
                     {
-                        Console.Write("* ");
+                        await WriteAsync("* ");
 
-                        line = await Console.In.ReadLineAsync();
+                        line = await ReadLineAsync(cancellationToken);
                         str += Environment.NewLine + line;
                     }
 
@@ -45,20 +46,29 @@ namespace GShell.Core
 
                     try
                     {
-                        var success = await Process(rawAssembly, scriptClassName!);
+                        var success = await ProcessAsync(rawAssembly, scriptClassName!, cancellationToken);
                         if (!success)
                             return ShellExitCode.ExecutionError;
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("Failed to process: {0}", ex);
+                        await WriteLineAsync($"Failed to process: {ex}", cancellationToken);
                         return ShellExitCode.ExecutionError;
                     }
                 }
             }
         }
 
-        protected abstract Task<bool> Process(byte[] rawAssembly, string scriptClassName);
+        protected abstract ValueTask<string> ReadLineAsync(CancellationToken cancellationToken = default);
+
+        protected abstract ValueTask WriteAsync(string s, CancellationToken cancellationToken = default);
+
+        protected virtual ValueTask WriteLineAsync(string s, CancellationToken cancellationToken = default)
+        {
+            return WriteAsync(s + Environment.NewLine, cancellationToken);
+        }
+
+        protected abstract Task<bool> ProcessAsync(byte[] rawAssembly, string scriptClassName, CancellationToken cancellationToken = default);
 
         private static bool IsCompleteSubmission(string input)
         {
