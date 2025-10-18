@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd0d8b712ba1784458302b6a5cf9a499, type: 3}
   m_Name: PlayerShellSettings
   m_EditorClassIdentifier: 
-  DllCompileSettings:
+  AssemblyCompilationSettings:
     BuildTarget: 19
     Development: 0
     OutputDir: HybridCLRData/HotUpdateDlls
-  DynamicDllCompileSettings:
+  DynamicCodeCompileSettings:
     SearchPaths: []
     References:
     - UnityEngine.CoreModule.dll

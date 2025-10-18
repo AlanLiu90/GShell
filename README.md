@@ -1,5 +1,10 @@
 # GShell
 
+[![NuGet](https://img.shields.io/nuget/v/GShell.svg)](https://www.nuget.org/packages/GShell)
+[![Releases](https://img.shields.io/github/release/AlanLiu90/GShell.svg)](https://github.com/AlanLiu90/GShell/releases)
+
+[English](./README_EN.md) | 简体中文
+
 用于Unity的REPL工具：
 1. 支持mono，包括编辑器和打包版本
 2. 支持IL2CPP（需要集成[HybridCLR](https://github.com/focus-creative-games/hybridclr)）
@@ -19,9 +24,9 @@
 - [配置说明](#配置说明)	
 - [限制](#限制)	
 
-### 功能示例
+## 功能示例
 ```
-> 1+2                                     // 执行表达式，输出值
+> 1 + 2                                   // 执行表达式
 3
 > var x = 2 + 3;                          // 定义变量
 > x                                       // 输出之前定义的变量的值
@@ -69,19 +74,19 @@ List<int>(3) {
 
 ### 在编辑器中运行
 1. 用Unity打开demo\Client工程
-2. 启动HTTP Server：Demo -> Start HTTP Server
+2. 启动HTTP服务器：Demo -> Start HTTP Server
 3. 打开场景：Scenes\main.unity
 4. 进入Play Mode
-5. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择EditorShellSettings
+5. 打开Shell Launcher：MODX -> Shell Launcher，配置选择EditorShellSettings
 6. 点击“Launch”
 
 ### 在IL2CPP打包版本中运行
 1. 用Unity打开demo\Client工程
-2. 启动HTTP Server：Demo -> Start HTTP Server
+2. 启动HTTP服务器：Demo -> Start HTTP Server
 3. 安装HybridCLR：HybridCLR -> Installer
 4. 构建Player：Build -> Win64
 5. 运行Player：demo\Client\Release-Win64\HybridCLRTrial.exe
-6. 在Unity中打开Shell Launcher：MODX -> Shell Launcher，配置选择PlayerShellSettings
+6. 打开Shell Launcher：MODX -> Shell Launcher，配置选择PlayerShellSettings
 7. 点击“Compile Scripts”
 8. 点击“Launch”
 
@@ -89,7 +94,7 @@ List<int>(3) {
 > 以在编辑器中运行为例
 
 1. 用Unity打开demo\Client工程
-2. 启动HTTP Server：Demo -> Start HTTP Server
+2. 启动HTTP服务器：Demo -> Start HTTP Server
 3. 打开场景：Scenes\main.unity
 4. 进入Play Mode
 5. 修改GShell.Web的配置：demo\GShell.Web\shellsettings.json
@@ -154,10 +159,10 @@ List<int>(3) {
    3. Extra Data Items：根据项目的实际情况修改
 
 ## 配置说明
-1. 编译程序集的配置
+1. Assembly Compilation Settings
    * 用于生成一份指定平台的dll，供GShell编译动态代码时引用
    * 在编辑器中使用时，需要将Build Target设置为`No Target`
-2. 编译动态代码的配置
+2. Dynamic Code Compilation Settings
    * Search Paths：搜索引用的dll的路径列表，越前面的目录优先级越高
       * 在编辑器中使用时，需要添加Library\ScriptAssemblies
       * 工具会自动在最前面添加编译程序集的输出目录
@@ -169,14 +174,16 @@ List<int>(3) {
       * System.Collections.Generic
       * System.Linq
       * UnityEngine
-   * Script Class Name：编译动态代码时，自动创建的类型名，一般不需要修改
-3. Runtime：编辑器中使用选择Mono，IL2CPP打包版本中使用选择IL2CPP
+   * Script Class Name：编译动态代码时，根据它自动创建类型名，一般不需要修改
+3. Runtime
+   * 编辑器中使用选择Mono
+   * 打包版本中使用，根据脚本后端选择Mono或IL2CPP
 3. Command：运行GShell的命令
 4. Execute URL：GShell编译代码后，将发送给这个URL执行
 5. Extra Assemblies: GShell发送的额外的Assembly
     * GShell.ObjectFormatter.dll: 支持使用roslyn的`CSharpObjectFormatter`格式化输出对象
 6. Extra Datas：GShell发送给`Execute URL`的额外数据。比如可以添加玩家ID，让游戏服务器依据它将GShell的请求转发给相应的客户端执行
-7. 认证的配置
+7. Authentication Settings
     * Type:
       * None: 不使用认证
       * Basic: 使用Basic认证方式，需要填写账号、密码

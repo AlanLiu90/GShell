@@ -5,7 +5,7 @@ using UnityEngine;
 namespace GShell
 {
     [Serializable]
-    public class DllCompileSettings
+    public class AssemblyCompilationSettings
     {
         public BuildTarget BuildTarget = BuildTarget.Android;
         public bool Development;
@@ -20,7 +20,7 @@ namespace GShell
     }
 
     [Serializable]
-    public class DynamicDllCompileSettings
+    public class DynamicCodeCompileSettings
     {
         public string[] SearchPaths;
         public string[] References;
@@ -51,8 +51,8 @@ namespace GShell
     [CreateAssetMenu(fileName = "ShellSettings", menuName = "ScriptableObjects/ShellSettings")]
     public class UnityShellSettings : ScriptableObject
     {
-        public DllCompileSettings DllCompileSettings = new DllCompileSettings();
-        public DynamicDllCompileSettings DynamicDllCompileSettings = new DynamicDllCompileSettings();
+        public AssemblyCompilationSettings AssemblyCompilationSettings = new AssemblyCompilationSettings();
+        public DynamicCodeCompileSettings DynamicCodeCompileSettings = new DynamicCodeCompileSettings();
         public Runtime Runtime;
         public string Command;
         public string ExecuteURL;

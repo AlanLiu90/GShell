@@ -50,7 +50,7 @@ namespace GShell
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.Space();
 
-            GUI.enabled = mSettings != null && mSettings.DllCompileSettings.BuildTarget != BuildTarget.NoTarget;
+            GUI.enabled = mSettings != null && mSettings.AssemblyCompilationSettings.BuildTarget != BuildTarget.NoTarget;
 
             if (GUILayout.Button("Compile Scripts"))
                 CompileScripts();
@@ -87,7 +87,7 @@ namespace GShell
                 return;
             }
 
-            var settings = mSettings.DllCompileSettings;
+            var settings = mSettings.AssemblyCompilationSettings;
 
             if (string.IsNullOrEmpty(settings.OutputDir))
             {
@@ -135,7 +135,7 @@ namespace GShell
 
             var searchPaths = new List<string>();
 
-            var dllCompileSettings = mSettings.DllCompileSettings;
+            var dllCompileSettings = mSettings.AssemblyCompilationSettings;
 
             if (dllCompileSettings.BuildTarget != BuildTarget.NoTarget)
             {
@@ -167,9 +167,9 @@ namespace GShell
                 return;
             }
 
-            if (mSettings.DynamicDllCompileSettings.SearchPaths != null)
+            if (mSettings.DynamicCodeCompileSettings.SearchPaths != null)
             {
-                foreach (var searchPath in mSettings.DynamicDllCompileSettings.SearchPaths)
+                foreach (var searchPath in mSettings.DynamicCodeCompileSettings.SearchPaths)
                 {
                     var dir = searchPath;
 
@@ -214,9 +214,9 @@ namespace GShell
 #endif
 
             settings.SearchPaths = searchPaths.ToArray();
-            settings.References = mSettings.DynamicDllCompileSettings.References ?? Array.Empty<string>();
-            settings.Usings = mSettings.DynamicDllCompileSettings.Usings ?? Array.Empty<string>();
-            settings.ScriptClassName = mSettings.DynamicDllCompileSettings.ScriptClassName;
+            settings.References = mSettings.DynamicCodeCompileSettings.References ?? Array.Empty<string>();
+            settings.Usings = mSettings.DynamicCodeCompileSettings.Usings ?? Array.Empty<string>();
+            settings.ScriptClassName = mSettings.DynamicCodeCompileSettings.ScriptClassName;
             settings.Runtime = mSettings.Runtime.ToString();
             settings.ExecuteURL = mSettings.ExecuteURL;
             settings.ExtraAssemblies = mSettings.ExtraAssemblies ?? Array.Empty<string>();
