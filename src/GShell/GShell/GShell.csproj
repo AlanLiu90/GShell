@@ -11,6 +11,7 @@
     <Nullable>enable</Nullable>
     <RepositoryUrl>https://github.com/AlanLiu90/GShell</RepositoryUrl>
     <Description>A REPL (Read-Eval-Print Loop) tool for Unity, supporting both Mono and IL2CPP.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,10 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="readme.txt">
-      <Pack>true</Pack>
-      <PackagePath>\</PackagePath>
-    </Content>
+    <None Include="README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
 </Project>

@@ -104,11 +104,54 @@ List<int>(3) {
 ## 集成
 工具使用HTTP(S)协议和外部通信。项目可以在服务端接收GShell发送的数据，将其转发给指定的客户端执行。客户端执行之后，通过服务端将结果转发回GShell
 
-1. 引用包：com.modx.shell，参考格式：https://github.com/AlanLiu90/GShell.git?path=/src/GShell.UnityClient/Packages/com.modx.shell#v1.1.0
-2. 下载 src\GShell 目录到本地，进行构建
-2. 参考demo工程，支持与GShell通信：
-   * 代码在 demo\Client\Assets\HotUpdate\TestShell.cs 和 demo\HttpServer\HttpServer.cs
-   * 配置在 demo\Client\Assets\Editor 中的 EditorShellSettings.asset 和 PlayerShellSettings.asset
+步骤：
+1. 引用包：com.modx.shell，参考格式：https://github.com/AlanLiu90/GShell.git?path=/src/GShell.UnityClient/Packages/com.modx.shell#v1.3.0
+2. 安装工具：
+   ```
+   dotnet tool install --global GShell
+   ```
+3. 支持与GShell通信：
+   1. 服务端接收GShell发送的数据（GShell使用JSON格式将以下数据用POST方式发送给服务端，地址为配置中的`Execute URL`）
+   ```c#
+   class ShellPostData
+   {
+	   public string SessionId { get; set; }
+	   public int SubmissionId { get; set; }
+	   public string EncodedAssembly { get; set; }
+	   public string ScriptClassName { get; set; }
+	   public Dictionary<string, string> ExtraEncodedAssemblies { get; set; }
+	   public Dictionary<string, string> ExtraData { get; set; }
+   }
+   ```
+   2. 服务端使用`ExtraData`（配置中的`Extra Data Items`）中的数据，确定目标客户端，并将`ShellPostData`转发过去
+   3. 客户端收到数据后执行代码，并将结果发送回服务端
+   ``` C#
+   public class ShellResponse
+   {
+	   public string Result { get; set; }
+	   public bool Success { get; set; }
+   }
+   
+   // 初始化
+   ShellExecutor mExecutor = new ShellExecutor(maximumOutputLength: 2048);
+   
+   // 执行代码
+   var shellData = JsonConvert.DeserializeObject<ShellPostData>(text);
+
+   mExecutor.EnsureObjectFormatterCreated(shellData.ExtraEncodedAssemblies);
+
+   var (result, success) = await mExecutor.Execute(shellData.SessionId, shellData.SubmissionId, shellData.EncodedAssembly, shellData.ScriptClassName);
+
+   var shellResponse = new ShellResponse() { Result = (string)result, Success = success };
+   
+   // 将shellResponse发送回服务端
+   ```
+   4. 服务端将`shellResponse`回复给GShell
+   5. 具体实现可参考demo工程，代码在 demo\Client\Assets\HotUpdate\TestShell.cs 和 demo\HttpServer\HttpServer.cs
+4. 将 demo\Client\Assets\Editor 中的 EditorShellSettings.asset 和 PlayerShellSettings.asset 拷贝到项目工程内，并做修改：
+   1. Command：改为`gshell`
+   2. Execute URL：改为项目实际使用的地址
+   3. Extra Data Items：根据项目的实际情况修改
 
 ## 配置说明
 1. 编译程序集的配置

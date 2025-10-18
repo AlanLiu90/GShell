@@ -8,7 +8,15 @@ namespace GShell
 {
     public sealed class ShellExecutor
     {
-        public int MaximumOutputLength { get; set; } = 8 * 1024;
+        public int MaximumOutputLength { get; private set; }
+
+        public ShellExecutor(int maximumOutputLength = 8 * 1024)
+        {
+            if (maximumOutputLength <= 0)
+                throw new ArgumentOutOfRangeException(nameof(maximumOutputLength));
+
+            MaximumOutputLength = maximumOutputLength;
+        }
 
         private class SessionData
         {

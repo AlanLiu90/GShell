@@ -36,7 +36,7 @@ public class TestShell : MonoBehaviour
 
     private IEnumerator Run()
     {
-        mExecutor = new ShellExecutor();
+        mExecutor = new ShellExecutor(maximumOutputLength: 2048);
 
         while (true)
         {

@@ -277,7 +277,14 @@ namespace GShell
                 }
             }
 
-            return !string.IsNullOrEmpty(fileName);
+            if (string.IsNullOrEmpty(fileName))
+                return false;
+
+            var dir = Path.GetDirectoryName(fileName);
+            if (!string.IsNullOrEmpty(dir))
+                fileName = Path.GetFullPath(fileName);
+
+            return true;
         }
 
         private static bool CanBuildPlayer(BuildTarget target)

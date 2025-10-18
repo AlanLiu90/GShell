@@ -6,7 +6,7 @@ namespace HttpServer
     {
         static async Task Main(string[] args)
         {
-            var url = "http://*:12345/";
+            var url = "http://localhost:12345/";
             var server = new HttpServer(url);
             await server.Run();
         }
