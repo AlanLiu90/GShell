@@ -7,11 +7,18 @@
     <Version>$(GShellVersion)</Version>
     <Deterministic>true</Deterministic>
     <Nullable>enable</Nullable>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <RepositoryUrl>https://github.com/AlanLiu90/GShell</RepositoryUrl>
+    <Description>The core library of GShell which is a REPL (Read-Eval-Print Loop) tool for Unity, supporting both Mono and IL2CPP.</Description>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
     <PackageReference Include="dnlib" Version="4.4.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +32,13 @@
   <ItemGroup>
     <None Include="..\GShell.ObjectFormatter\bin\$(Configuration)\netstandard2.0\GShell.ObjectFormatter.dll" Pack="true" PackagePath="buildTransitive\GShell.ObjectFormatter.dll" />
     <None Include="buildTransitive\GShell.Core.targets" Pack="true" PackagePath="buildTransitive\GShell.Core.targets" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="readme.txt">
+      <Pack>true</Pack>
+      <PackagePath>\</PackagePath>
+    </Content>
   </ItemGroup>
 
 </Project>

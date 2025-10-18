@@ -1,0 +1,1 @@
+The core library of GShell which is a REPL (Read-Eval-Print Loop) tool for Unity, supporting both Mono and IL2CPP
