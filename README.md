@@ -162,6 +162,27 @@ GShell使用HTTP(S)协议和外部通信。项目可以在服务端接收GShell�
    2. Execute URL：改为项目实际使用的地址
    3. Extra Data Items：根据项目的实际情况修改
 
+<details>
+<summary>使用本地工具方式安装GShell</summary>
+
+使用本地工具方式安装，可以将工具的版本信息添加到版本控制中，便于管理
+
+步骤（以Windows为例）：
+1. 在Unity工程目录（Assets所在目录），执行：
+```bat
+dotnet new tool-manifest
+dotnet tool install GShell
+```
+2. 在同目录内，创建文件start_gshell.bat，并写入以下内容：
+```bat
+dotnet tool restore
+dotnet tool run gshell %*
+```
+3. 将 .config\dotnet-tools.json 添加到版本控制中
+4. 将配置文件中的Command改为`start_gshell.bat`
+
+</details>
+
 ### 使用GShell.Core
 对于期望在自己的工具中使用GShell功能的项目，可以集成GShell.Core
 

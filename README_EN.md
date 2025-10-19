@@ -171,6 +171,28 @@ Steps:
    - **Execute URL** → your actual endpoint  
    - **Extra Data Items** → adjust according to your project
 
+<details>
+<summary>Install GShell as a Local Tool</summary>
+
+Installing GShell as a local tool allows you to add the tool’s version information to version control, making it easier to manage.
+
+Steps (using Windows as an example):
+
+1. In the Unity project directory (the one containing `Assets`), run:
+```bat
+dotnet new tool-manifest
+dotnet tool install GShell
+```
+2. In the same directory, create a file named start_gshell.bat and add the following content:
+```bat
+dotnet tool restore
+dotnet tool run gshell %*
+```
+3. Add .config\dotnet-tools.json to version control.
+4. In the configuration file, change **Command** to `start_gshell.bat`.
+
+</details>
+
 ### Use GShell.Core
 For projects that want to use GShell’s functionality within their own tools, GShell.Core can be integrated.
 
