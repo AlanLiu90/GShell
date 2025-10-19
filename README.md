@@ -20,8 +20,10 @@
     - [在编辑器中运行](#在编辑器中运行)
     - [在IL2CPP打包版本中运行](#在IL2CPP打包版本中运行)
     - [使用网页版GShell](#使用网页版GShell)
-- [集成](#集成)	
-- [配置说明](#配置说明)	
+- [集成](#集成)
+    - [使用GShell](#使用GShell)
+    - [使用GShell.Core](#使用GShellCore)
+- [配置说明](#配置说明)
 - [限制](#限制)	
 
 ## 功能示例
@@ -107,11 +109,13 @@ List<int>(3) {
 8. 点击“Start”
 
 ## 集成
-工具使用HTTP(S)协议和外部通信。项目可以在服务端接收GShell发送的数据，将其转发给指定的客户端执行。客户端执行之后，通过服务端将结果转发回GShell
+
+### 使用GShell
+GShell使用HTTP(S)协议和外部通信。项目可以在服务端接收GShell发送的数据，将其转发给指定的客户端执行。客户端执行之后，通过服务端将结果转发回GShell
 
 步骤：
-1. 引用包：com.modx.shell，参考格式：https://github.com/AlanLiu90/GShell.git?path=/src/GShell.UnityClient/Packages/com.modx.shell#v1.3.0
-2. 安装工具：
+1. 引用包：com.modx.gshell，参考格式：https://github.com/AlanLiu90/GShell.git?path=/src/GShell.UnityClient/Packages/com.modx.gshell#v1.3.1
+2. 安装GShell：
    ```
    dotnet tool install --global GShell
    ```
@@ -157,6 +161,13 @@ List<int>(3) {
    1. Command：改为`gshell`
    2. Execute URL：改为项目实际使用的地址
    3. Extra Data Items：根据项目的实际情况修改
+
+### 使用GShell.Core
+对于期望在自己的工具中使用GShell功能的项目，可以集成GShell.Core
+
+可参考GShell.Web工程，它相当于是在浏览器中运行的GShell。主要代码：
+   * demo\GShell.Web\Shell\Shell.cs：实现了GShell.Core中的`ShellBase`的子类
+   * demo\GShell.Web\Components\Pages\Terminal.razor：实现了网页终端的输入、输出
 
 ## 配置说明
 1. Assembly Compilation Settings

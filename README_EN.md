@@ -16,13 +16,15 @@ For implementation details, see this [blog post](https://alanliu90.hatenablog.co
 
 ## Table of Contents
 
-- [Feature Examples](#feature-examples)  
-- [How to Run the Demo](#how-to-run-the-demo)  
-  - [Run in the Editor](#run-in-the-editor)  
-  - [Run in an IL2CPP Build](#run-in-an-il2cpp-build)  
-  - [Use the Web Version of GShell](#use-the-web-version-of-gshell)  
-- [Integration](#integration)  
-- [Configuration](#configuration)  
+- [Feature Examples](#feature-examples)
+- [How to Run the Demo](#how-to-run-the-demo)
+  - [Run in the Editor](#run-in-the-editor)
+  - [Run in an IL2CPP Build](#run-in-an-il2cpp-build)
+  - [Use the Web Version of GShell](#use-the-web-version-of-gshell)
+- [Integration](#integration)
+  - [Use GShell](#use-gshell)
+  - [Use GShell.Core](#use-gshellcore)
+- [Configuration](#configuration)
 - [Limitations](#limitations)
 
 ### Feature Examples
@@ -113,13 +115,14 @@ List<int>(3) {
 
 ## Integration
 
+### Use GShell
 The tool communicates externally via HTTP(S). Your server can receive data from GShell, forward it to the target client for execution, and then send the result back to GShell.
 
 Steps:
 
-1. Add the package: com.modx.shell, e.g., https://github.com/AlanLiu90/GShell.git?path=/src/GShell.UnityClient/Packages/com.modx.shell#v1.3.0
+1. Add the package: com.modx.gshell, e.g., https://github.com/AlanLiu90/GShell.git?path=/src/GShell.UnityClient/Packages/com.modx.gshell#v1.3.1
 
-2. Install the tool:  
+2. Install GShell:  
    ```
    dotnet tool install --global GShell
    ```
@@ -167,6 +170,13 @@ Steps:
    - **Command** → `gshell`  
    - **Execute URL** → your actual endpoint  
    - **Extra Data Items** → adjust according to your project
+
+### Use GShell.Core
+For projects that want to use GShell’s functionality within their own tools, GShell.Core can be integrated.
+
+You can refer to the GShell.Web project, which essentially runs GShell in the browser. The main files:
+   - demo\GShell.Web\Shell\Shell.cs: Implements a subclass of `ShellBase` from GShell.Core
+   - demo\GShell.Web\Components\Pages\Terminal.razor: Implements the web terminal’s input and output
 
 ## Configuration
 

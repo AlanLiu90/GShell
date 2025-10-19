@@ -1,7 +1,7 @@
 {
   "dependencies": {
-    "com.modx.shell": {
-      "version": "file:com.modx.shell",
+    "com.modx.gshell": {
+      "version": "file:com.modx.gshell",
       "depth": 0,
       "source": "embedded",
       "dependencies": {}
