@@ -30,7 +30,7 @@ namespace GShell.Web.Shell
         private readonly HttpClient mHttpClient;
 
         public Shell(
-            ShellContext context,
+            IShellContext context,
             string url,
             string[] extraAssemblies,
             Dictionary<string, string> extraData,
@@ -61,13 +61,11 @@ namespace GShell.Web.Shell
             return ValueTask.CompletedTask;
         }
 
-        protected override async Task<bool> ProcessAsync(byte[] rawAssembly, string scriptClassName, CancellationToken cancellationToken = default)
+        protected override async Task<bool> ProcessAsync(int submissionId, byte[] rawAssembly, string scriptClassName, CancellationToken cancellationToken = default)
         {
-            int submissionId = mContext.SubmissionId - 1;
-
             var obj = new
             {
-                SessionId = mContext.SessionId,
+                SessionId = SessionId,
                 SubmissionId = submissionId,
                 EncodedAssembly = Convert.ToBase64String(rawAssembly),
                 ScriptClassName = scriptClassName,

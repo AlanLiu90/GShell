@@ -4,6 +4,7 @@
 <PageTitle>GShell.Web</PageTitle>
 
 @using System.Collections.Immutable
+@using System.IO
 @using System.Threading
 @using System.Threading.Channels
 @using System.Diagnostics
@@ -295,16 +296,17 @@ function (event) {
 
 			var settings = ShellSettings.Value;
 			var targetFramework = settings.TargetFramework;
-			var searchPaths = settings.SearchPaths;
+			var assemblySearchPaths = settings.AssemblySearchPaths;
 			var references = settings.References;
 			var usings = settings.Usings;
+			var souraceFileSearchPaths = settings.SourceFileSearchPaths.Select(x => Path.GetFullPath(x)).ToArray();
 			var scriptClassName = settings.ScriptClassName;
 			var extraAssemblies = settings.ExtraAssemblies;
 			var extraDataItems = settings.ExtraDataItems ?? Array.Empty<ExtraDataItem>();
 			var additionalAttributeType = GetAdditionalAttributeType(settings.Runtime);
 
 			var targetFrameworkReferences = GetTargetFrameworkReferences(targetFramework);
-			var referenceResolver = new FileReferenceResolver(searchPaths);
+			var referenceResolver = new FileReferenceResolver(assemblySearchPaths);
 			extraData = extraDataItems
 				.Concat(extraData.Select(x => new ExtraDataItem { Key = x.Key, Value = x.Value }))
 				.ToDictionary(x => x.Key, x => x.Value);
@@ -314,11 +316,12 @@ function (event) {
 			bool exit = false;
 			while (!exit)
 			{
-				var context = new ShellContext(
+				var context = ShellContextFactory.CreateContext(
 					targetFrameworkReferences,
 					referenceResolver,
 					references,
 					usings,
+					souraceFileSearchPaths,
 					scriptClassName,
 					additionalAttributeType,
 					logger

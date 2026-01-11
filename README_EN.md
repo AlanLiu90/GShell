@@ -7,9 +7,9 @@ English | [简体中文](./README.md)
 
 A REPL tool for Unity:
 
-1. Supports Mono (both in the Editor and in the Player)  
-2. Supports IL2CPP (requires integration with [HybridCLR](https://github.com/focus-creative-games/hybridclr))  
-3. Supports direct access to non-public classes, methods, properties, fields, etc., without using reflection  
+1. Supports Mono (both in the Editor and in the Player)
+2. Supports IL2CPP (requires integration with [HybridCLR](https://github.com/focus-creative-games/hybridclr))
+3. Supports direct access to non-public classes, methods, properties, fields, etc., without using reflection
 4. Supports Unity 2019 and later
 
 For implementation details, see this [blog post](https://alanliu90.hatenablog.com/entry/2025/03/08/Unity%E4%B8%ADREPL%E5%8A%9F%E8%83%BD%E7%9A%84%E5%AE%9E%E7%8E%B0) (In Chinese)
@@ -78,39 +78,39 @@ List<int>(3) {
 
 ### Run in the Editor
 
-1. Open the `demo\Client` project with Unity.  
-2. Start the HTTP Server: `Demo -> Start HTTP Server`.  
-3. Open the scene: `Scenes\main.unity`.  
-4. Enter Play Mode.  
-5. Open **Shell Launcher**: `MODX -> Shell Launcher` and select `EditorShellSettings`.  
+1. Open the `demo\Client` project with Unity.
+2. Start the HTTP Server: `Demo -> Start HTTP Server`.
+3. Open the scene: `Scenes\main.unity`.
+4. Enter Play Mode.
+5. Open **Shell Launcher**: `MODX -> Shell Launcher` and select `EditorShellSettings`.
 6. Click **Launch**.
 
 ### Run in an IL2CPP Build
 
-1. Open the `demo\Client` project with Unity.  
-2. Start the HTTP Server: `Demo -> Start HTTP Server`.  
-3. Install HybridCLR: `HybridCLR -> Installer`.  
-4. Build the Player: `Build -> Win64`.  
-5. Run the Player: `demo\Client\Release-Win64\HybridCLRTrial.exe`.  
-6. Open **Shell Launcher**: `MODX -> Shell Launcher` and select `PlayerShellSettings`.  
-7. Click **Compile Scripts**.  
+1. Open the `demo\Client` project with Unity.
+2. Start the HTTP Server: `Demo -> Start HTTP Server`.
+3. Install HybridCLR: `HybridCLR -> Installer`.
+4. Build the Player: `Build -> Win64`.
+5. Run the Player: `demo\Client\Release-Win64\HybridCLRTrial.exe`.
+6. Open **Shell Launcher**: `MODX -> Shell Launcher` and select `PlayerShellSettings`.
+7. Click **Compile Scripts**.
 8. Click **Launch**.
 
 ### Use the Web Version of GShell
 
 > Using the Editor as an example
 
-1. Open the `demo\Client` project with Unity.  
-2. Start the HTTP Server: `Demo -> Start HTTP Server`.  
-3. Open the scene: `Scenes\main.unity`.  
-4. Enter Play Mode.  
-5. Modify the config file `demo\GShell.Web\shellsettings.json`:  
-   - **TargetFramework**: Set to `netstandard2.0` or `netstandard2.1` depending on your Unity version.  
-   - **SearchPaths**: Adjust the path according to your local Unity installation.  
-6. Run GShell.Web (choose one of the following):  
-   - Open `demo\GShell.Web\GShell.Web.sln` in Visual Studio and press F5 (browser opens automatically).  
-   - Run `dotnet run GShell.Web.csproj` in the `demo\GShell.Web` directory, then open [http://localhost:5052/](http://localhost:5052/) in your browser.  
-7. Enter `100` in the **PlayerId** field (100 is the default for the demo client).  
+1. Open the `demo\Client` project with Unity.
+2. Start the HTTP Server: `Demo -> Start HTTP Server`.
+3. Open the scene: `Scenes\main.unity`.
+4. Enter Play Mode.
+5. Modify the config file `demo\GShell.Web\shellsettings.json`:
+   - **TargetFramework**: Set to `netstandard2.0` or `netstandard2.1` depending on your Unity version.
+   - **SearchPaths**: Adjust the path according to your local Unity installation.
+6. Run GShell.Web (choose one of the following):
+   - Open `demo\GShell.Web\GShell.Web.sln` in Visual Studio and press F5 (browser opens automatically).
+   - Run `dotnet run GShell.Web.csproj` in the `demo\GShell.Web` directory, then open [http://localhost:5052/](http://localhost:5052/) in your browser.
+7. Enter `100` in the **PlayerId** field (100 is the default for the demo client).
 8. Click **Start**.
 
 ## Integration
@@ -122,13 +122,13 @@ Steps:
 
 1. Add the package: com.modx.gshell, e.g., https://github.com/AlanLiu90/GShell.git?path=/src/GShell.UnityClient/Packages/com.modx.gshell#v1.3.1
 
-2. Install GShell:  
+2. Install GShell:
    ```
    dotnet tool install --global GShell
    ```
 
-3. Support communication with GShell:  
-   1. The server receives data from GShell (GShell sends JSON via POST to the configured `Execute URL`):  
+3. Support communication with GShell:
+   1. The server receives data from GShell (GShell sends JSON via POST to the configured `Execute URL`):
    ```c#
    class ShellPostData
    {
@@ -140,8 +140,8 @@ Steps:
        public Dictionary<string, string> ExtraData { get; set; }
    }
    ```
-   2. The server uses data in `ExtraData` (from `Extra Data Items` in the configuration) to determine the target client and forwards the `ShellPostData`.  
-   3. The client executes the code and sends the result back:  
+   2. The server uses data in `ExtraData` (from `Extra Data Items` in the configuration) to determine the target client and forwards the `ShellPostData`.
+   3. The client executes the code and sends the result back:
    ```c#
    public class ShellResponse
    {
@@ -163,12 +163,12 @@ Steps:
 
    // Send shellResponse back to the server
    ```
-   4. The server replies to GShell with `shellResponse`.  
+   4. The server replies to GShell with `shellResponse`.
    5. See the demo implementation in `demo\Client\Assets\HotUpdate\TestShell.cs` and `demo\HttpServer\HttpServer.cs`.
 
-4. Copy `EditorShellSettings.asset` and `PlayerShellSettings.asset` from `demo\Client\Assets\Editor` into your project and modify:  
-   - **Command** → `gshell`  
-   - **Execute URL** → your actual endpoint  
+4. Copy `EditorShellSettings.asset` and `PlayerShellSettings.asset` from `demo\Client\Assets\Editor` into your project and modify:
+   - **Command** → `gshell`
+   - **Execute URL** → your actual endpoint
    - **Extra Data Items** → adjust according to your project
 
 <details>
@@ -202,39 +202,40 @@ You can refer to the GShell.Web project, which essentially runs GShell in the br
 
 ## Configuration
 
-1. **Assembly Compilation Settings**  
-   - Used to generate a platform-specific DLL for GShell to reference during compilation.  
+1. **Assembly Compilation Settings**
+   - Used to generate a platform-specific DLL for GShell to reference during compilation.
    - When used in the Editor, set the Build Target to **No Target**.
 
-2. **Dynamic Code Compilation Settings**  
-   - **Search Paths**: List of directories to search for referenced DLLs. Earlier entries have higher priority.  
-     - When used in the Editor, add `Library\ScriptAssemblies`.  
-     - The tool automatically prepends the output directory for compiled assemblies.  
-     - It automatically appends the directory containing `UnityEngine.CoreModule.dll`.  
-   - **References**: DLLs to reference during compilation. Common DLLs:  
-     - `UnityEngine.CoreModule.dll`  
-     *(mscorlib.dll, System.Core.dll, and other framework DLLs are included automatically)*  
-   - **Usings**: Namespaces automatically imported during compilation. Common namespaces:  
-     - `System`  
-     - `System.Collections.Generic`  
-     - `System.Linq`  
-     - `UnityEngine`  
+2. **Dynamic Code Compilation Settings**
+   - **Assembly Search Paths**: List of directories to search for referenced DLLs. Earlier entries have higher priority.
+     - When used in the Editor, add `Library\ScriptAssemblies`.
+     - The tool automatically prepends the output directory for compiled assemblies.
+     - It automatically appends the directory containing `UnityEngine.CoreModule.dll`.
+   - **References**: DLLs to reference during compilation. Common DLLs:
+     - `UnityEngine.CoreModule.dll`
+     *(mscorlib.dll, System.Core.dll, and other framework DLLs are included automatically)*
+   - **Usings**: Namespaces automatically imported during compilation. Common namespaces:
+     - `System`
+     - `System.Collections.Generic`
+     - `System.Linq`
+     - `UnityEngine`
+   - **Source File Search Paths**：List of directories to search for source files, used by `#load` directive.
    - **Script Class Name**: When compiling dynamic code, the type name is generated automatically based on it and usually doesn’t need to be modified.
 
 3. **Runtime**
    - Use **Mono** in the Editor
    - Use **Mono** or **IL2CPP** in the Player depending on the scripting backend.
-4. **Command**: The command to run GShell.  
-5. **Execute URL**: The URL to send compiled code to for execution.  
-6. **Extra Assemblies**: Additional assemblies sent by GShell.  
-   - `GShell.ObjectFormatter.dll`: Enables using Roslyn’s `CSharpObjectFormatter` for object formatting.  
-7. **Extra Datas**: Additional data sent to the `Execute URL`, e.g., player ID for routing requests.  
+4. **Command**: The command to run GShell.
+5. **Execute URL**: The URL to send compiled code to for execution.
+6. **Extra Assemblies**: Additional assemblies sent by GShell.
+   - `GShell.ObjectFormatter.dll`: Enables using Roslyn’s `CSharpObjectFormatter` for object formatting.
+7. **Extra Datas**: Additional data sent to the `Execute URL`, e.g., player ID for routing requests.
 8. **Authentication Settings**
    - **Type**:
-     - `None`: No authentication  
-     - `Basic`: Basic auth (requires username/password)  
-     - `JWT`: JSON Web Token (requires token)  
-   - See `demo\HttpServer` for authentication and token generation examples.  
+     - `None`: No authentication
+     - `Basic`: Basic auth (requires username/password)
+     - `JWT`: JSON Web Token (requires token)
+   - See `demo\HttpServer` for authentication and token generation examples.
    - When using authentication, HTTPS is recommended.
 
 ## Limitations

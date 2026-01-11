@@ -22,9 +22,10 @@ namespace GShell
     [Serializable]
     public class DynamicCodeCompileSettings
     {
-        public string[] SearchPaths;
+        public string[] AssemblySearchPaths;
         public string[] References;
         public string[] Usings;
+        public string[] SourceFileSearchPaths;
         public string ScriptClassName = "Script";
     }
 

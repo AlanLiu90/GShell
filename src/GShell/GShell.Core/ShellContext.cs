@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace GShell.Core
 {
-    public class ShellContext
+    internal sealed class ShellContext : IShellContext
     {
         internal static CSharpParseOptions ParseOptions => mParseOptions;
 
@@ -35,6 +35,7 @@ namespace GShell.Core
             IReferenceResolver referenceResolver,
             IEnumerable<string> references,
             IEnumerable<string> usings,
+            IEnumerable<string> sourceFileSearchPaths,
             string scriptClassName = "Script",
             AdditionalAttributeType additionalAttributeType = AdditionalAttributeType.None,
             ILogger? logger = null)
@@ -44,7 +45,7 @@ namespace GShell.Core
             var metadataReferenceResolver = new ShellMetadataReferenceResolver(referenceResolver);
 
             mCompilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
-                sourceReferenceResolver: new SourceFileResolver(ImmutableArray<string>.Empty, Directory.GetCurrentDirectory()),
+                sourceReferenceResolver: new SourceFileResolver(sourceFileSearchPaths, Directory.GetCurrentDirectory()),
                 metadataReferenceResolver: metadataReferenceResolver,
                 metadataImportOptions: MetadataImportOptions.All);
 

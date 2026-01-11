@@ -30,9 +30,10 @@ namespace GShell
                 var settings = JsonSerializer.Deserialize<ShellSettings>(json)!;
 
                 var targetFramework = settings.TargetFramework;
-                var searchPaths = settings.SearchPaths;
+                var assemblySearchPaths = settings.AssemblySearchPaths;
                 var references = settings.References;
                 var usings = settings.Usings;
+                var sourceFileSearchPaths = settings.SourceFileSearchPaths;
                 var scriptClassName = settings.ScriptClassName;
                 var extraAssemblies = settings.ExtraAssemblies;
                 var extraDataItems = settings.ExtraDataItems;
@@ -41,24 +42,26 @@ namespace GShell
 
                 PrintInfo(
                     targetFramework,
-                    searchPaths,
+                    assemblySearchPaths,
                     references,
                     usings,
+                    sourceFileSearchPaths,
                     extraAssemblies,
                     extraDataItems
                 );
 
                 var targetFrameworkReferences = GetTargetFrameworkReferences(targetFramework);
-                var referenceResolver = new FileReferenceResolver(searchPaths);
+                var referenceResolver = new FileReferenceResolver(assemblySearchPaths);
 
                 bool exit = false;
                 while (!exit)
                 {
-                    var context = new ShellContext(
+                    var context = ShellContextFactory.CreateContext(
                         targetFrameworkReferences,
                         referenceResolver,
                         references,
                         usings,
+                        sourceFileSearchPaths,
                         scriptClassName,
                         additionalAttributeType,
                         logger
@@ -99,9 +102,10 @@ namespace GShell
 
         private static void PrintInfo(
             string targetFramework,
-            string[] searchPaths,
+            string[] assemblySearchPaths,
             string[] references,
             string[] usings,
+            string[] sourceFileSearchPaths,
             string[] extraAssemblies,
             ExtraDataItem[] extraDataItems)
         {
@@ -112,9 +116,9 @@ namespace GShell
             sb.AppendLine();
 
             sb.AppendLine();
-            sb.AppendLine("SearchPath:");
+            sb.AppendLine("AssemblySearchPaths:");
 
-            foreach (var item in searchPaths)
+            foreach (var item in assemblySearchPaths)
             {
                 sb.AppendFormat("  {0}", item);
                 sb.AppendLine();
@@ -133,6 +137,15 @@ namespace GShell
             sb.AppendLine("Using:");
 
             foreach (var item in usings)
+            {
+                sb.AppendFormat("  {0}", item);
+                sb.AppendLine();
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("SourceFileSearchPaths:");
+
+            foreach (var item in sourceFileSearchPaths)
             {
                 sb.AppendFormat("  {0}", item);
                 sb.AppendLine();

@@ -195,7 +195,7 @@ dotnet tool run gshell %*
    * 用于生成一份指定平台的dll，供GShell编译动态代码时引用
    * 在编辑器中使用时，需要将Build Target设置为`No Target`
 2. Dynamic Code Compilation Settings
-   * Search Paths：搜索引用的dll的路径列表，越前面的目录优先级越高
+   * Assembly Search Paths：搜索引用的dll的路径列表，越前面的目录优先级越高
       * 在编辑器中使用时，需要添加Library\ScriptAssemblies
       * 工具会自动在最前面添加编译程序集的输出目录
       * 工具会自动在最后面添加UnityEngine.CoreModule.dll所在的目录
@@ -206,6 +206,7 @@ dotnet tool run gshell %*
       * System.Collections.Generic
       * System.Linq
       * UnityEngine
+   * Source File Search Paths：代码文件的搜索路径列表，用于`#load`命令
    * Script Class Name：编译动态代码时，根据它自动创建类型名，一般不需要修改
 3. Runtime
    * 编辑器中使用选择Mono

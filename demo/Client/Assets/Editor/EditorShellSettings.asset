@@ -17,7 +17,7 @@ MonoBehaviour:
     Development: 0
     OutputDir: 
   DynamicCodeCompileSettings:
-    SearchPaths:
+    AssemblySearchPaths:
     - Library\ScriptAssemblies
     References:
     - UnityEngine.CoreModule.dll
@@ -26,6 +26,7 @@ MonoBehaviour:
     - System.Collections.Generic
     - System.Linq
     - UnityEngine
+    SourceFileSearchPaths: []
     ScriptClassName: Script
   Runtime: 1
   Command: dotnet run --project ../../src/GShell/GShell/GShell.csproj --

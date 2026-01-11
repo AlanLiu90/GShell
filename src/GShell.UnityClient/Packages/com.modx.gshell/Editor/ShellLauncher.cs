@@ -133,7 +133,7 @@ namespace GShell
                 return;
             }
 
-            var searchPaths = new List<string>();
+            var assemblySearchPaths = new List<string>();
 
             var dllCompileSettings = mSettings.AssemblyCompilationSettings;
 
@@ -152,7 +152,7 @@ namespace GShell
                     return;
                 }
 
-                searchPaths.Add(Path.GetFullPath(dllDir));
+                assemblySearchPaths.Add(Path.GetFullPath(dllDir));
             }
 
             if (string.IsNullOrEmpty(mSettings.Command))
@@ -167,9 +167,9 @@ namespace GShell
                 return;
             }
 
-            if (mSettings.DynamicCodeCompileSettings.SearchPaths != null)
+            if (mSettings.DynamicCodeCompileSettings.AssemblySearchPaths != null)
             {
-                foreach (var searchPath in mSettings.DynamicCodeCompileSettings.SearchPaths)
+                foreach (var searchPath in mSettings.DynamicCodeCompileSettings.AssemblySearchPaths)
                 {
                     var dir = searchPath;
 
@@ -179,12 +179,16 @@ namespace GShell
                         return;
                     }
 
-                    searchPaths.Add(Path.GetFullPath(dir));
+                    assemblySearchPaths.Add(Path.GetFullPath(dir));
                 }
             }
 
-            searchPaths.Add(Path.Combine(EditorApplication.applicationContentsPath, "Managed/UnityEngine"));
-            searchPaths = searchPaths.Select(x => x.Replace("\\", "/")).ToList();
+            assemblySearchPaths.Add(Path.Combine(EditorApplication.applicationContentsPath, "Managed/UnityEngine"));
+            assemblySearchPaths = assemblySearchPaths.Select(x => x.Replace("\\", "/")).ToList();
+
+            var sourceFileSearchPaths = mSettings.DynamicCodeCompileSettings.SourceFileSearchPaths
+                .Select(x => Path.GetFullPath(x))
+                .ToArray();
 
             if (mSettings.ExtraDataItems != null)
             {
@@ -213,9 +217,10 @@ namespace GShell
             settings.TargetFramework = "netstandard2.0";
 #endif
 
-            settings.SearchPaths = searchPaths.ToArray();
+            settings.AssemblySearchPaths = assemblySearchPaths.ToArray();
             settings.References = mSettings.DynamicCodeCompileSettings.References ?? Array.Empty<string>();
             settings.Usings = mSettings.DynamicCodeCompileSettings.Usings ?? Array.Empty<string>();
+            settings.SourceFileSearchPaths = sourceFileSearchPaths;
             settings.ScriptClassName = mSettings.DynamicCodeCompileSettings.ScriptClassName;
             settings.Runtime = mSettings.Runtime.ToString();
             settings.ExecuteURL = mSettings.ExecuteURL;

@@ -12,9 +12,10 @@ namespace GShell
     public class ShellSettings
     {
         public string TargetFramework;
-        public string[] SearchPaths;
+        public string[] AssemblySearchPaths;
         public string[] References;
         public string[] Usings = new string[0];
+        public string[] SourceFileSearchPaths;
         public string ScriptClassName;
         public string Runtime;
         public string ExecuteURL;

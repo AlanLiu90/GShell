@@ -1,7 +1,7 @@
 {
   "Shell": {
     "TargetFramework": "netstandard2.1",
-    "SearchPaths": [
+    "AssemblySearchPaths": [
         "../Client/Library/ScriptAssemblies",
         "H:/UnityEditors/2022.3.60f1/Editor/Data/Managed/UnityEngine"
     ],
@@ -13,6 +13,9 @@
         "System.Collections.Generic",
         "System.Linq",
         "UnityEngine"
+    ],
+    "SourceFileSearchPaths": [
+        "../Client"
     ],
     "ScriptClassName": "Script",
     "Runtime": "Mono",

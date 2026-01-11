@@ -8,11 +8,13 @@ namespace GShell.Core
 {
     public abstract class ShellBase
     {
-        protected readonly ShellContext mContext;
+        public string SessionId => mContext.SessionId;
+
+        private readonly IShellContext mContext;
 
         private static readonly Regex mDirectivePattern = new Regex(@"\s*#(exit|quit|reset)\s*");
 
-        public ShellBase(ShellContext context)
+        public ShellBase(IShellContext context)
         {
             mContext = context;
         }
@@ -46,7 +48,7 @@ namespace GShell.Core
 
                     try
                     {
-                        var success = await ProcessAsync(rawAssembly, scriptClassName!, cancellationToken);
+                        var success = await ProcessAsync(mContext.SubmissionId - 1, rawAssembly, scriptClassName!, cancellationToken);
                         if (!success)
                             return ShellExitCode.ExecutionError;
                     }
@@ -68,7 +70,7 @@ namespace GShell.Core
             return WriteAsync(s + Environment.NewLine, cancellationToken);
         }
 
-        protected abstract Task<bool> ProcessAsync(byte[] rawAssembly, string scriptClassName, CancellationToken cancellationToken = default);
+        protected abstract Task<bool> ProcessAsync(int submissionId, byte[] rawAssembly, string scriptClassName, CancellationToken cancellationToken = default);
 
         private static bool IsCompleteSubmission(string input)
         {
